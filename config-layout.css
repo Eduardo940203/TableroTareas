@@ -1,0 +1,17 @@
+/* Configuracion: dos columnas, tabla ancha e intercambio junto a respaldo. */
+#app .grid:has(#cfgForm) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+#app .grid:has(#cfgForm) > .card { min-width: 0; }
+#app .grid:has(#cfgForm) > .card:has(#cfgForm) { grid-area: 1 / 1; }
+#app .grid:has(#cfgForm) > .card:has([data-act="recargar"]) { grid-area: 1 / 2; }
+#app .grid:has(#cfgForm) > .card:has(#colsEd) { grid-area: 2 / 1 / auto / -1; }
+#app .grid:has(#cfgForm) > .card:has(#xchgProy) { grid-area: 3 / 1; }
+#app .grid:has(#cfgForm) > .card:has([data-act="exportar"]) { grid-area: 3 / 2; }
+#colsEd { max-width: 100%; overflow-x: auto; }
+#colsEd td:last-child { white-space: nowrap; }
+@media (max-width: 900px) {
+  #app .grid:has(#cfgForm) { grid-template-columns: minmax(0, 1fr); }
+  #app .grid:has(#cfgForm) > .card { grid-area: auto !important; }
+}
