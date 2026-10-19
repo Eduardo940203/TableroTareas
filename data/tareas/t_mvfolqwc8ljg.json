@@ -1,0 +1,47 @@
+{
+  "id": "t_mvfolqwc8ljg",
+  "titulo": "Sesión seguimiento Hileab",
+  "descripcion": "",
+  "proyectoId": "p_mvfojm3xkoa2",
+  "estado": "proceso",
+  "prioridad": "media",
+  "responsable": "Nancy",
+  "inicio": "2026-10-19",
+  "vence": "2026-10-19",
+  "etiquetas": [
+    "asistencia",
+    "finazas"
+  ],
+  "checklist": [
+    {
+      "id": "c_mvfon6qe9u7l",
+      "texto": "Presentación",
+      "hecho": true
+    },
+    {
+      "id": "c_mvfoncpay33o",
+      "texto": "Recopilación estatus",
+      "hecho": true
+    },
+    {
+      "id": "c_mvfonh0e4d38",
+      "texto": "Sesión con Usuario",
+      "hecho": true
+    }
+  ],
+  "adjuntos": [
+    {
+      "nombre": "tablero-2026-10-19.xlsx",
+      "archivo": "tablero-2026-10-19.xlsx",
+      "ruta": "recursos/t_mvfolqwc8ljg/tablero-2026-10-19.xlsx",
+      "size": 12587,
+      "tipo": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    }
+  ],
+  "orden": 0,
+  "creada": "2026-10-19T20:03:00.588Z",
+  "completada": null,
+  "archivada": false,
+  "modificada": "2026-10-19T22:14:17.445Z",
+  "fechaArchivo": null
+}

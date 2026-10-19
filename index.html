@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero de Tareas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="btnMenu" data-act="menu" title="Menú">☰</button>
+  <a class="brand" href="#inicio"><span class="logo" id="brandLogo">TT</span><span id="brandName">Tablero de Tareas</span></a>
+  <div class="spacer"></div>
+  <span id="folderStatus" class="folder-status"></span>
+  <button class="icon-btn" data-act="tema" id="btnTema" title="Cambiar tema">🌙</button>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a href="#inicio" data-route="inicio">🏠 Inicio</a>
+    <a href="#tablero" data-route="tablero">🗂️ Tablero</a>
+    <a href="#proyectos" data-route="proyectos">📁 Proyectos</a>
+    <a href="#gantt" data-route="gantt">📊 Gantt</a>
+    <div class="side-title">Seguimiento</div>
+    <a href="#archivo" data-route="archivo">📦 Archivo</a>
+    <a href="#historial" data-route="historial">🕑 Historial</a>
+    <div class="side-title">Proyectos</div>
+    <div id="sideProyectos"></div>
+    <div class="side-title">Administración</div>
+    <a href="#conexiones" data-route="conexiones">🔗 Conexiones</a>
+    <a href="#config" data-route="config">⚙️ Configuración</a>
+  </nav>
+  <main>
+    <div id="folderBanner"></div>
+    <div id="app"></div>
+  </main>
+</div>
+<div id="toasts"></div>
+<script src="app.js"></script>
+<script src="conexiones.js"></script>
+<script src="intercambio.js"></script>
+</body>
+</html>

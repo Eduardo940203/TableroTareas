@@ -1,0 +1,20 @@
+{
+  "id": "p_mvfojm3xkoa2",
+  "nombre": "Asistencias",
+  "descripcion": "descripcion",
+  "estado": "en curso",
+  "responsable": "Nancy",
+  "inicio": "2026-10-19",
+  "fin": "2026-11-07",
+  "color": "#27eb24",
+  "hitos": [],
+  "notas": [
+    {
+      "id": "n_mvfoxtbf4dcx",
+      "texto": "Generar Correo para Visto bueno contraloria",
+      "fecha": "2026-10-19T20:12:23.595Z"
+    }
+  ],
+  "adjuntos": [],
+  "modificado": "2026-10-19T20:12:23.595Z"
+}

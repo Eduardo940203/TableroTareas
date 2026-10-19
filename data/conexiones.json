@@ -1,0 +1,284 @@
+{
+  "tipos": [
+    {
+      "id": "bd",
+      "nombre": "Base de datos",
+      "icono": "🛢️",
+      "campos": [
+        {
+          "id": "bd_0",
+          "etiqueta": "Host",
+          "tipo": "texto",
+          "opciones": [],
+          "obligatorio": true
+        },
+        {
+          "id": "bd_1",
+          "etiqueta": "Puerto",
+          "tipo": "numero",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "bd_2",
+          "etiqueta": "Servicio / Base de datos",
+          "tipo": "texto",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "bd_3",
+          "etiqueta": "Usuario",
+          "tipo": "texto",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "bd_4",
+          "etiqueta": "Password",
+          "tipo": "secreto",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "bd_5",
+          "etiqueta": "Seguridad",
+          "tipo": "lista",
+          "opciones": [
+            "Ninguna",
+            "SSL/TLS",
+            "STARTTLS",
+            "SSH",
+            "Wallet"
+          ],
+          "obligatorio": false
+        },
+        {
+          "id": "bd_6",
+          "etiqueta": "Cadena de conexión",
+          "tipo": "textoLargo",
+          "opciones": [],
+          "obligatorio": false
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "nombre": "API REST",
+      "icono": "🔌",
+      "campos": [
+        {
+          "id": "api_0",
+          "etiqueta": "URL base",
+          "tipo": "url",
+          "opciones": [],
+          "obligatorio": true
+        },
+        {
+          "id": "api_1",
+          "etiqueta": "Autenticación",
+          "tipo": "lista",
+          "opciones": [
+            "Ninguna",
+            "Basic",
+            "Bearer/JWT",
+            "OAuth2",
+            "API Key"
+          ],
+          "obligatorio": false
+        },
+        {
+          "id": "api_2",
+          "etiqueta": "Usuario / Client ID",
+          "tipo": "texto",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "api_3",
+          "etiqueta": "Password / Client Secret",
+          "tipo": "secreto",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "api_4",
+          "etiqueta": "Token URL",
+          "tipo": "url",
+          "opciones": [],
+          "obligatorio": false
+        },
+        {
+          "id": "api_5",
+          "etiqueta": "Scope",
+          "tipo": "texto",
+          "opciones": [],
+          "obligatorio": false
+        }
+      ]
+    },
+    {
+      "id": "sftp",
+      "nombre": "SFTP / FTP",
+      "icono": "📁",
+      "campos": [
+        {
+          "id": "sftp_0",
+          "etiqueta": "Host",
+          "tipo": "texto",
+          "obligatorio": true,
+          "opciones": []
+        },
+        {
+          "id": "sftp_1",
+          "etiqueta": "Puerto",
+          "tipo": "numero",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "sftp_2",
+          "etiqueta": "Seguridad",
+          "tipo": "lista",
+          "obligatorio": false,
+          "opciones": [
+            "FTP",
+            "FTPS",
+            "SFTP"
+          ]
+        },
+        {
+          "id": "sftp_3",
+          "etiqueta": "Usuario",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "sftp_4",
+          "etiqueta": "Password",
+          "tipo": "secreto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "sftp_5",
+          "etiqueta": "Ruta remota",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "sftp_6",
+          "etiqueta": "Llave privada",
+          "tipo": "textoLargo",
+          "obligatorio": false,
+          "opciones": []
+        }
+      ]
+    },
+    {
+      "id": "cloud",
+      "nombre": "Nube (OCI / AWS / Azure)",
+      "icono": "☁️",
+      "campos": [
+        {
+          "id": "cloud_0",
+          "etiqueta": "Región",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "cloud_1",
+          "etiqueta": "Tenancy / Cuenta",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "cloud_2",
+          "etiqueta": "Usuario OCID / Access Key",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "cloud_3",
+          "etiqueta": "Fingerprint",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "cloud_4",
+          "etiqueta": "Compartment / Resource Group",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "cloud_5",
+          "etiqueta": "Llave privada / Secret",
+          "tipo": "secreto",
+          "obligatorio": false,
+          "opciones": []
+        }
+      ]
+    },
+    {
+      "id": "smtp",
+      "nombre": "Correo (SMTP)",
+      "icono": "✉️",
+      "campos": [
+        {
+          "id": "smtp_0",
+          "etiqueta": "Host",
+          "tipo": "texto",
+          "obligatorio": true,
+          "opciones": []
+        },
+        {
+          "id": "smtp_1",
+          "etiqueta": "Puerto",
+          "tipo": "numero",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "smtp_2",
+          "etiqueta": "Seguridad",
+          "tipo": "lista",
+          "obligatorio": false,
+          "opciones": [
+            "Ninguna",
+            "SSL/TLS",
+            "STARTTLS"
+          ]
+        },
+        {
+          "id": "smtp_3",
+          "etiqueta": "Usuario",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "smtp_4",
+          "etiqueta": "Password",
+          "tipo": "secreto",
+          "obligatorio": false,
+          "opciones": []
+        },
+        {
+          "id": "smtp_5",
+          "etiqueta": "Remitente",
+          "tipo": "texto",
+          "obligatorio": false,
+          "opciones": []
+        }
+      ]
+    }
+  ],
+  "items": []
+}

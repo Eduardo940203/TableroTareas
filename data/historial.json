@@ -1,0 +1,204 @@
+[
+  {
+    "id": "e_mvftakrtdgnu",
+    "fecha": "2026-10-19T22:14:17.513Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (adjuntos)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfszytsy9i7",
+    "fecha": "2026-10-19T22:06:02.512Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (adjuntos)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfsyd5oltir",
+    "fecha": "2026-10-19T22:04:47.772Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (adjuntos)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfsy2vajbv2",
+    "fecha": "2026-10-19T22:04:34.438Z",
+    "tipo": "tarea_restaurada",
+    "texto": "Restaurada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfsxzay05vl",
+    "fecha": "2026-10-19T22:04:29.818Z",
+    "tipo": "tarea_archivada",
+    "texto": "Archivada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfp4g4skl25",
+    "fecha": "2026-10-19T20:17:33.100Z",
+    "tipo": "tarea_movida",
+    "texto": "Sesión seguimiento Hileab: Terminado → En Proceso",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfp4bus2nts",
+    "fecha": "2026-10-19T20:17:27.556Z",
+    "tipo": "tarea_movida",
+    "texto": "Sesión seguimiento Hileab: En Proceso → Activo",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfp4b4x58vf",
+    "fecha": "2026-10-19T20:17:26.625Z",
+    "tipo": "tarea_movida",
+    "texto": "Sesión seguimiento Hileab: Terminado → En Proceso",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoxtdroum9",
+    "fecha": "2026-10-19T20:12:23.679Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en Asistencias",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfow2pt3fby",
+    "fecha": "2026-10-19T20:11:02.465Z",
+    "tipo": "tarea_restaurada",
+    "texto": "Restaurada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfovmgjh4ac",
+    "fecha": "2026-10-19T20:10:41.395Z",
+    "tipo": "tarea_archivada",
+    "texto": "Archivada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfouttqtdcz",
+    "fecha": "2026-10-19T20:10:04.286Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (vence)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfor6u4hv79",
+    "fecha": "2026-10-19T20:07:14.524Z",
+    "tipo": "tarea_restaurada",
+    "texto": "Restaurada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoqdd9nmab",
+    "fecha": "2026-10-19T20:06:36.333Z",
+    "tipo": "tarea_archivada",
+    "texto": "Archivada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoq60gcsnq",
+    "fecha": "2026-10-19T20:06:26.800Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (checklist)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfooonyg3la",
+    "fecha": "2026-10-19T20:05:17.662Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (checklist)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfookhgb0x1",
+    "fecha": "2026-10-19T20:05:12.244Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: Sesión seguimiento Hileab (checklist)",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoo633sb7n",
+    "fecha": "2026-10-19T20:04:53.583Z",
+    "tipo": "tarea_movida",
+    "texto": "Sesión seguimiento Hileab: En proceso → Terminado",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoo2z28gc9",
+    "fecha": "2026-10-19T20:04:49.550Z",
+    "tipo": "tarea_movida",
+    "texto": "Sesión seguimiento Hileab: Activo → En proceso",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfonoq44tfu",
+    "fecha": "2026-10-19T20:04:31.084Z",
+    "tipo": "tarea_creada",
+    "texto": "Tarea creada: Sesión seguimiento Hileab",
+    "tareaId": "t_mvfolqwc8ljg",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfolhrtci18",
+    "fecha": "2026-10-19T20:02:48.761Z",
+    "tipo": "proyecto_creado",
+    "texto": "Proyecto creado: Asistencias",
+    "proyectoId": "p_mvfojm3xkoa2"
+  },
+  {
+    "id": "e_mvfoj493ivuk",
+    "fecha": "2026-10-19T20:00:57.927Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: Test Proyecto"
+  },
+  {
+    "id": "e_mvfoj0issb0i",
+    "fecha": "2026-10-19T20:00:53.092Z",
+    "tipo": "tarea_eliminada",
+    "texto": "Eliminada: tarea excel",
+    "proyectoId": "p_mvfofrnczz4s"
+  },
+  {
+    "id": "e_mvfoi8mi9z14",
+    "fecha": "2026-10-19T20:00:16.938Z",
+    "tipo": "tarea_editada",
+    "texto": "Editada: tarea excel (checklist)",
+    "tareaId": "t_mvfogdlk8vf7",
+    "proyectoId": "p_mvfofrnczz4s"
+  },
+  {
+    "id": "e_mvfohl4w4bt9",
+    "fecha": "2026-10-19T19:59:46.496Z",
+    "tipo": "tarea_creada",
+    "texto": "Tarea creada: tarea excel",
+    "tareaId": "t_mvfogdlk8vf7",
+    "proyectoId": "p_mvfofrnczz4s"
+  },
+  {
+    "id": "e_mvfog7z2fijy",
+    "fecha": "2026-10-19T19:58:42.782Z",
+    "tipo": "proyecto_creado",
+    "texto": "Proyecto creado: Test Proyecto",
+    "proyectoId": "p_mvfofrnczz4s"
+  }
+]

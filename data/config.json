@@ -1,0 +1,33 @@
+{
+  "nombrePortal": "Tablero de Tareas",
+  "logoTexto": "Seg",
+  "colorPrimario": "#2563eb",
+  "tema": "oscuro",
+  "responsable": "Nancy",
+  "columnas": [
+    {
+      "id": "activo",
+      "nombre": "Activo",
+      "color": "#64748b",
+      "terminal": false
+    },
+    {
+      "id": "proceso",
+      "nombre": "En Proceso",
+      "color": "#d97706",
+      "terminal": false
+    },
+    {
+      "id": "terminado",
+      "nombre": "Terminado",
+      "color": "#16a34a",
+      "terminal": true
+    }
+  ],
+  "prioridades": [
+    "baja",
+    "media",
+    "alta",
+    "critica"
+  ]
+}
