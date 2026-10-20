@@ -1,0 +1,76 @@
+name: Avance actual del Gantt v17.1
+on:
+  push:
+    branches: [TableroTareas-v17]
+    paths: [.github/workflows/gantt-avance-v17.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  corregir:
+    if: github.ref == 'refs/heads/TableroTareas-v17'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v17
+      - name: Separar conjuntos de tareas y probar el modelo
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          path=Path('js/presentaciones.js')
+          source=path.read_text(encoding='utf-8')
+          if 'const allTasks=Store.tareas.filter' in source:
+              assert 'allTasks.filter(belongs)' in source
+              raise SystemExit(0)
+          marker='/* v11.1:'
+          assert source.count(marker)==1
+          prefix,active=source.split(marker,1)
+          def once(old,new):
+              global active
+              assert active.count(old)==1, 'Patrón inesperado: '+old[:100]
+              active=active.replace(old,new,1)
+          once('const tasks=Store.tareas.filter(t=>t.proyectoId===p.id&&(o.archivadas||!t.archivada)&&base.overlap(t.inicio,t.vence,o.from,o.cut));', 'const allTasks=Store.tareas.filter(t=>t.proyectoId===p.id&&(o.archivadas||!t.archivada));\n  const tasks=allTasks.filter(t=>base.overlap(t.inicio,t.vence,o.from,o.cut));')
+          once("pct:prog('fase',f,child)","pct:prog('fase',f,allTasks.filter(t=>ds.has(t.faseId)))")
+          once("pct:prog('fase',root||{},ts)","pct:prog('fase',root||{},allTasks.filter(belongs))")
+          once('Tablero: tareas del período','Tablero: avance actual (sin filtro de fechas)')
+          once('% tablero del período','% tablero actual (todas las tareas)')
+          once('Las actividades, siguientes pasos y tareas vencidas sí respetan el período y los niveles configurados.','Las actividades, siguientes pasos y tareas vencidas sí respetan el período y los niveles configurados. Los porcentajes del Gantt y del encabezado corresponden al avance actual de todas las tareas de cada fase, sin filtro de fechas; se respeta la opción de archivadas.')
+          source=prefix+marker+active
+          subprocess.run(['node','--check'],input=source,text=True,check=True)
+          test=r'''
+          const vm=require('vm'),assert=require('node:assert/strict'),source=require('fs').readFileSync(0,'utf8');
+          const phases=[{id:'f',nombre:'Raiz',inicio:'2026-04-01',fin:'2026-10-20',origen:{porcentaje:37}},{id:'h',padreId:'f',nombre:'Historica',inicio:'2026-04-01',fin:'2026-05-01',origen:{porcentaje:20}}];
+          const tasks=[{id:'a',titulo:'Historica parcial',proyectoId:'p',faseId:'h',estado:'proceso',inicio:'2026-04-01',vence:'2026-05-01',checklist:[{hecho:true},{hecho:false}]},{id:'b',titulo:'Actual completa',proyectoId:'p',faseId:'f',estado:'done',inicio:'2026-10-01',vence:'2026-10-15'},{id:'c',titulo:'Archivada',proyectoId:'p',faseId:'h',estado:'done',inicio:'2026-04-01',vence:'2026-05-01',archivada:true}];
+          const ctx={window:{TableroPpt:{build(){},overlap:(a,b,f,c)=>a<=c&&b>=f}},document:{addEventListener(){},getElementById(){return null;},body:{}},MutationObserver:class{observe(){}},Store:{proyectos:[{id:'p',nombre:'P',fases:phases,hitos:[]}],tareas:tasks,saveProyecto(){},proy(){},esTerminal:s=>s==='done'},GanttV7:{descendants:(p,id)=>new Set(id==='f'?['f','h']:['h'])},parseD:s=>new Date(s+'T00:00:00Z'),isoD:d=>d.toISOString().slice(0,10),fmtF:s=>s};
+          vm.createContext(ctx);vm.runInContext(source,ctx);
+          const options={from:'2026-10-01',cut:'2026-10-20',selected:[{pid:'p',id:'f'}],levels:3,mode:'tablero'};
+          const m=o=>ctx.window.TableroPpt.model(o)[0];
+          let g=m(options);assert.equal(g.rows.find(r=>r.name==='Historica').pct,50);assert.equal(g.pct,75);assert.equal(g.rows.find(r=>r.name==='Raiz').pct,75);assert.equal(g.ts.length,1);assert.equal(g.done.length,1);assert.equal(g.late.length,0);
+          g=m({...options,from:'2026-11-01',cut:'2026-11-20'});assert.equal(g.pct,75);assert.equal(g.ts.length,0);assert.equal(g.rows.find(r=>r.name==='Historica').pct,50);
+          g=m({...options,archivadas:true});assert.equal(g.pct,83);
+          g=m({...options,mode:'project'});assert.equal(g.pct,37);assert.equal(g.rows.find(r=>r.name==='Historica').pct,20);
+          console.log('PASS: avance historico/actual, fase superior, seguimiento por periodo, archivadas y Project original.');
+          '''
+          subprocess.run(['node','-e',test],input=source,text=True,check=True)
+          path.write_text(source,encoding='utf-8')
+          index=Path('index.html')
+          html=index.read_text(encoding='utf-8')
+          assert html.count('content="TableroTareas-v17"')==1
+          index.write_text(html.replace('content="TableroTareas-v17"','content="TableroTareas-v17.1"'),encoding='utf-8')
+          log=Path('docs/CHANGELOG.md')
+          title,sep,rest=log.read_text(encoding='utf-8').partition('\n')
+          entry='\n## TableroTareas-v17.1\n\n- Porcentajes de fases/subfases y encabezado del Gantt: promedio del avance actual de todas las tareas descendientes, sin excluirlas por fechas. Se respeta incluir/excluir archivadas y el modo Project original.\n- El seguimiento (terminadas, siguientes pasos y vencidas) mantiene el filtro de período. Las filas de actividades, niveles, fechas, eje temporal y diseño permanecen sin cambios.\n- Se aclara en el selector y pie de diapositiva que los porcentajes son actuales, no exclusivos del período. Sin rango visible no fuerza un avance de 0%.\n- Pruebas automáticas sobre el modelo completo: fase histórica al 50%, raíz al 75%, período sin actividad, archivadas y porcentajes Project. Pendiente validación visual en PowerPoint y navegador.\n- No modifica datos, checklists ni adjuntos.\n\n'
+          log.write_text(title+'\n'+entry+rest,encoding='utf-8')
+          PY
+      - name: Publicar solo en v17
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/presentaciones.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix v17.1: calcular avance actual del Gantt sin filtrar tareas por fechas'
+          git push origin HEAD:TableroTareas-v17
