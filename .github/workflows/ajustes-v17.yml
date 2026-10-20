@@ -1,0 +1,95 @@
+name: Notas y porcentajes v17
+on:
+  push:
+    branches: [TableroTareas-v17]
+    paths: [.github/workflows/ajustes-v17.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  actualizar:
+    if: github.ref == 'refs/heads/TableroTareas-v17'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v17
+      - name: Aplicar y probar ajustes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          app = Path('js/app.js')
+          ppt = Path('js/presentaciones.js')
+          a = app.read_text(encoding='utf-8')
+          s = ppt.read_text(encoding='utf-8')
+          if 'function notasFiltroActual()' in a:
+              assert 'function avanceTareaPresentacion(t)' in s, 'Actualización incompleta.'
+              raise SystemExit(0)
+          notes = '''let NOTAS_FILTRO = '';
+          function notasFiltroActual() {
+            return NOTAS_FILTRO === '__general__' || (NOTAS_FILTRO && Store.proy(NOTAS_FILTRO)) ? NOTAS_FILTRO : '';
+          }
+          function notasFiltradas() {
+            const f = notasFiltroActual();
+            return todasLasNotas().filter(n => !f || (f === '__general__' ? !n.proyectoId : n.proyectoId === f));
+          }
+          function notasListaHtml() {
+            const filtradas = notasFiltradas(), visibles = notasFiltroActual() ? filtradas : filtradas.slice(0, 10);
+            return visibles.map(notaHtml).join('') || '<div class="empty">Sin notas en este filtro</div>';
+          }
+          function notasFiltroHtml() {
+            const f = notasFiltroActual();
+            return '<div class="filters" style="margin-top:10px"><label class="small muted" for="notasFiltro">Ver notas de</label><select id="notasFiltro"><option value="">Todas (10 recientes)</option><option value="__general__"' + (f === '__general__' ? ' selected' : '') + '>General (sin proyecto)</option>' + Store.proyectos.slice().sort((a,b) => a.nombre.localeCompare(b.nombre)).map(p => '<option value="' + esc(p.id) + '"' + (p.id === f ? ' selected' : '') + '>' + esc(p.nombre) + '</option>').join('') + '</select></div>';
+          }
+          document.addEventListener('change', e => {
+            if (e.target.id !== 'notasFiltro' && !(e.target.matches('.nota-sel') && $('#listaNotas'))) return;
+            NOTAS_FILTRO = e.target.id === 'notasFiltro' ? e.target.value : (e.target.value || '__general__');
+            const selector = $('#notasFiltro'); if (selector) selector.value = notasFiltroActual();
+            const lista = $('#listaNotas'); if (lista) lista.innerHTML = notasListaHtml();
+          });
+          '''
+          def once(text, old, new):
+              assert text.count(old) == 1, 'Patrón inesperado: ' + old[:100]
+              return text.replace(old,new,1)
+          a = once(a, 'function todasLasNotas() {', notes + '\nfunction todasLasNotas() {')
+          a = once(a, "notaForm() + '<div id=\"listaNotas\"", "notaForm() + notasFiltroHtml() + '<div id=\"listaNotas\"")
+          a = once(a, "todasLasNotas().slice(0, 10).map(notaHtml).join('')", 'notasListaHtml()')
+          a = once(a, '<select class="nota-sel">', '<span class="small muted">Guardar nota en:</span><select class="nota-sel">')
+          helper = '''function avanceTareaPresentacion(t) {
+            if (Store.esTerminal(t.estado)) return 100;
+            const ck = Array.isArray(t.checklist) ? t.checklist : [];
+            return ck.length ? 100 * ck.filter(c => c.hecho).length / ck.length : 0;
+          }
+          '''
+          old = "kind==='fase'?(list.length?Math.round(100*list.filter(t=>Store.esTerminal(t.estado)).length/list.length):0):kind==='hito'?(obj.hecho?100:0):(Store.esTerminal(obj.estado)?100:0)"
+          new = "kind==='fase'?(list.length?Math.round(list.reduce((sum,t)=>sum+avanceTareaPresentacion(t),0)/list.length):0):kind==='hito'?(obj.hecho?100:0):Math.round(avanceTareaPresentacion(obj))"
+          assert s.count(old) == 2, 'Se esperaban los dos calculadores históricos de avance.'
+          s = helper + '\n' + s.replace(old,new)
+          for code in [a,s]:
+              subprocess.run(['node','--check'],input=code,text=True,check=True)
+          nt = "const assert=require('node:assert/strict');let listener;const document={addEventListener:(event,fn)=>listener=fn};const output={innerHTML:''};const $=sel=>sel==='#listaNotas'?output:null;const esc=String;const Store={proyectos:[{id:'p1',nombre:'A'},{id:'p2',nombre:'B'},{id:'p3',nombre:'Vacío'}],proy(id){return this.proyectos.find(p=>p.id===id);}};const todasLasNotas=()=>[{id:'n1',proyectoId:'p1'},{id:'n2',proyectoId:'p2'},{id:'g1',proyectoId:''}];const notaHtml=n=>n.id;\n" + notes + "\nfunction choose(value){listener({target:{id:'notasFiltro',value}});}choose('p1');assert.equal(output.innerHTML,'n1');choose('p2');assert.equal(output.innerHTML,'n2');choose('__general__');assert.equal(output.innerHTML,'g1');choose('');assert.equal(output.innerHTML,'n1n2g1');choose('p3');assert.match(output.innerHTML,/Sin notas/);choose('p1');assert(notasFiltroHtml().includes('value=\"p1\" selected'));listener({target:{id:'',value:'p2',matches:()=>true}});assert.equal(output.innerHTML,'n2');console.log('PASS filtros de notas');"
+          subprocess.run(['node','-e',nt],check=True)
+          pt = "const assert=require('node:assert/strict');const Store={esTerminal:s=>s==='done'};\n" + helper + "\nconst t=(estado,items)=>({estado,checklist:items.map(hecho=>({hecho}))});assert.equal(avanceTareaPresentacion(t('proceso',[true,true,true])),100);assert.equal(avanceTareaPresentacion(t('proceso',[true,false])),50);assert.equal(Math.round(avanceTareaPresentacion(t('proceso',[true,false,false]))),33);assert.equal(avanceTareaPresentacion(t('done',[])),100);assert.equal(avanceTareaPresentacion(t('activo',[])),0);assert.equal(avanceTareaPresentacion({estado:'activo'}),0);const ts=[t('proceso',[true,false]),t('done',[]),t('activo',[])];assert.equal(Math.round(ts.reduce((n,t)=>n+avanceTareaPresentacion(t),0)/ts.length),50);console.log('PASS avance parcial y promedio');"
+          subprocess.run(['node','-e',pt],check=True)
+          app.write_text(a,encoding='utf-8')
+          ppt.write_text(s,encoding='utf-8')
+          index=Path('index.html')
+          html=index.read_text(encoding='utf-8')
+          html=once(html,'content="TableroTareas-v16.1"','content="TableroTareas-v17"')
+          index.write_text(html,encoding='utf-8')
+          log=Path('docs/CHANGELOG.md')
+          title,sep,rest=log.read_text(encoding='utf-8').partition('\n')
+          entry='\n## TableroTareas-v17\n\n- Notas rápidas: filtro Ver notas de independiente del destino Guardar nota en, con Todas (10 recientes), General y proyectos. Cambiar el destino también filtra sus notas. El filtro se conserva al refrescar la vista durante la sesión.\n- Presentación, modo Tablero: tareas del período: una tarea terminal vale 100%; las demás usan hechos/total del checklist. Sin checklist el avance parcial es 0%. Las fases y el total usan el promedio simple de las tareas del período, sin redondear antes del promedio.\n- Se conserva el modo Project original, el diseño PPTX, el período, niveles y clasificación por estado de terminadas/vencidas/siguientes pasos. Un checklist al 100% no cambia automáticamente el estado de la tarea.\n- No modifica datos ni adjuntos; mantiene carpetas y corrección de ancho v16.1.\n- Pruebas automáticas: sintaxis de ambos JS, filtros, selección, vacíos y porcentajes. Pendiente validación de extremo a extremo en navegador y PowerPoint.\n\n'
+          log.write_text(title+'\n'+entry+rest,encoding='utf-8')
+          PY
+      - name: Publicar solo en v17
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/app.js js/presentaciones.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'v17: filtrar notas por proyecto y calcular avance parcial de presentación'
+          git push origin HEAD:TableroTareas-v17
