@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## TableroTareas-v17
+
+- Notas rápidas: filtro Ver notas de independiente del destino Guardar nota en, con Todas (10 recientes), General y proyectos. Cambiar el destino también filtra sus notas. El filtro se conserva al refrescar la vista durante la sesión.
+- Presentación, modo Tablero: tareas del período: una tarea terminal vale 100%; las demás usan hechos/total del checklist. Sin checklist el avance parcial es 0%. Las fases y el total usan el promedio simple de las tareas del período, sin redondear antes del promedio.
+- Se conserva el modo Project original, el diseño PPTX, el período, niveles y clasificación por estado de terminadas/vencidas/siguientes pasos. Un checklist al 100% no cambia automáticamente el estado de la tarea.
+- No modifica datos ni adjuntos; mantiene carpetas y corrección de ancho v16.1.
+- Pruebas automáticas: sintaxis de ambos JS, filtros, selección, vacíos y porcentajes. Pendiente validación de extremo a extremo en navegador y PowerPoint.
+
+
 ## TableroTareas-v16.1
 
 Corrige la declaración flex de las columnas: flex:0 0:1200px era inválido; ahora se genera flex:0 0 1200px. Se conservan los valores de ancho guardados y el desplazamiento horizontal. No se modifican data/ ni recursos/. Validación automática: sintaxis JavaScript y sustitución del patrón incorrecto. Pendiente: prueba visual en navegador.

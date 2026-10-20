@@ -1,3 +1,9 @@
+function avanceTareaPresentacion(t) {
+  if (Store.esTerminal(t.estado)) return 100;
+  const ck = Array.isArray(t.checklist) ? t.checklist : [];
+  return ck.length ? 100 * ck.filter(c => c.hecho).length / ck.length : 0;
+}
+
 /* PMO v9.1: período inclusivo y dos niveles visibles; no modifica datos del tablero. */
 (() => {
 'use strict';
@@ -22,7 +28,7 @@ function model(o){
    const root=fs.find(f=>f.id===id);if(id&&!root)continue;const ids=id?GanttV7.descendants(p,id):new Set();
    const belongs=t=>id?ids.has(t.faseId):!fs.some(f=>f.id===t.faseId),ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(h=>belongs(h)&&overlap(h.fecha,h.fecha,o.from,o.cut));
    if(!ts.length&&!hs.length)continue;
-   const progress=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(100*list.filter(t=>Store.esTerminal(t.estado)).length/list.length):0):kind==='hito'?(obj.hecho?100:0):(Store.esTerminal(obj.estado)?100:0);
+   const progress=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(list.reduce((sum,t)=>sum+avanceTareaPresentacion(t),0)/list.length):0):kind==='hito'?(obj.hecho?100:0):Math.round(avanceTareaPresentacion(obj));
    const rows=[];
    function phaseRow(f,depth){const ds=GanttV7.descendants(p,f.id),child=ts.filter(t=>ds.has(t.faseId)),hit=hs.filter(h=>ds.has(h.faseId));if(!child.length&&!hit.length)return;const dates=[...child.flatMap(t=>[t.inicio,t.vence]),...hit.map(h=>h.fecha)].filter(valid).sort();rows.push({kind:'fase',name:f.nombre,depth,start:f.inicio||dates[0],end:f.fin||dates[dates.length-1],pct:progress('fase',f,child)});}
    if(root){phaseRow(root,0);for(const f of fs.filter(f=>f.padreId===id).sort((a,b)=>(a.orden||0)-(b.orden||0)))phaseRow(f,1);}
@@ -122,7 +128,7 @@ function model(o){
    const root=fs.find(f=>f.id===id);if(id&&!root)continue;
    const ids=id?GanttV7.descendants(p,id):new Set(),belongs=t=>id?ids.has(t.faseId):!fs.some(f=>f.id===t.faseId);
    const ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(h=>belongs(h)&&base.overlap(h.fecha,h.fecha,o.from,o.cut));
-   const prog=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(100*list.filter(t=>Store.esTerminal(t.estado)).length/list.length):0):kind==='hito'?(obj.hecho?100:0):(Store.esTerminal(obj.estado)?100:0);
+   const prog=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(list.reduce((sum,t)=>sum+avanceTareaPresentacion(t),0)/list.length):0):kind==='hito'?(obj.hecho?100:0):Math.round(avanceTareaPresentacion(obj));
    const rows=[],direct=(x,fid)=>fid?x.faseId===fid:!fs.some(f=>f.id===x.faseId);
    const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ts.filter(t=>ds.has(t.faseId)),hit=hs.filter(h=>ds.has(h.faseId));const dates=[...child.flatMap(t=>[t.inicio,t.vence]),...hit.map(h=>h.fecha)].filter(valid).sort();rows.push({kind:'fase',name:f.nombre,depth,start:f.inicio||dates[0],end:f.fin||dates[dates.length-1],pct:prog('fase',f,child)});};
    const visit=(f,depth)=>{

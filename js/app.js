@@ -354,6 +354,29 @@ function vencInfo(t) {
 function opcionesProy(sel, vacio) {
   return '<option value="">' + vacio + '</option>' + Store.proyectos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(p => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.nombre) + '</option>').join('');
 }
+let NOTAS_FILTRO = '';
+function notasFiltroActual() {
+  return NOTAS_FILTRO === '__general__' || (NOTAS_FILTRO && Store.proy(NOTAS_FILTRO)) ? NOTAS_FILTRO : '';
+}
+function notasFiltradas() {
+  const f = notasFiltroActual();
+  return todasLasNotas().filter(n => !f || (f === '__general__' ? !n.proyectoId : n.proyectoId === f));
+}
+function notasListaHtml() {
+  const filtradas = notasFiltradas(), visibles = notasFiltroActual() ? filtradas : filtradas.slice(0, 10);
+  return visibles.map(notaHtml).join('') || '<div class="empty">Sin notas en este filtro</div>';
+}
+function notasFiltroHtml() {
+  const f = notasFiltroActual();
+  return '<div class="filters" style="margin-top:10px"><label class="small muted" for="notasFiltro">Ver notas de</label><select id="notasFiltro"><option value="">Todas (10 recientes)</option><option value="__general__"' + (f === '__general__' ? ' selected' : '') + '>General (sin proyecto)</option>' + Store.proyectos.slice().sort((a,b) => a.nombre.localeCompare(b.nombre)).map(p => '<option value="' + esc(p.id) + '"' + (p.id === f ? ' selected' : '') + '>' + esc(p.nombre) + '</option>').join('') + '</select></div>';
+}
+document.addEventListener('change', e => {
+  if (e.target.id !== 'notasFiltro' && !(e.target.matches('.nota-sel') && $('#listaNotas'))) return;
+  NOTAS_FILTRO = e.target.id === 'notasFiltro' ? e.target.value : (e.target.value || '__general__');
+  const selector = $('#notasFiltro'); if (selector) selector.value = notasFiltroActual();
+  const lista = $('#listaNotas'); if (lista) lista.innerHTML = notasListaHtml();
+});
+
 function todasLasNotas() {
   return [...Store.notasGen.map(n => ({ ...n, proyectoId: '' })), ...Store.proyectos.flatMap(p => (p.notas || []).map(n => ({ ...n, proyectoId: p.id })))].sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
@@ -364,7 +387,7 @@ function notaHtml(n) {
 }
 function notaForm(proyFijo) {
   return '<div class="nota-form" data-proy="' + (proyFijo || '') + '"><textarea rows="3" placeholder="Escribe una nota…"></textarea><div class="filters" style="margin-top:6px">' +
-    (proyFijo === undefined ? '<select class="nota-sel">' + opcionesProy('', 'General (sin proyecto)') + '</select>' : '') +
+    (proyFijo === undefined ? '<span class="small muted">Guardar nota en:</span><select class="nota-sel">' + opcionesProy('', 'General (sin proyecto)') + '</select>' : '') +
     '<button class="btn primary" data-act="nota-guardar">Guardar nota</button></div></div>';
 }
 
@@ -378,8 +401,8 @@ function vInicio() {
   const stats = Store.config.columnas.map(c => '<div class="card stat" style="border-top:4px solid ' + esc(c.color) + '"><div class="muted small">' + esc(c.nombre) + '</div><div class="n">' + act.filter(t => t.estado === c.id).length + '</div></div>').join('');
   app().innerHTML = '<div class="page-head"><h3>Inicio</h3><div class="filters"><button class="btn primary" data-act="tarea-nueva">＋ Nueva tarea</button><button class="btn" data-act="proy-nuevo">＋ Nuevo proyecto</button></div></div>' +
     '<div class="grid g4" style="margin-bottom:14px">' + stats + '<div class="card stat" style="border-top:4px solid var(--danger)"><div class="muted small">Vencidas</div><div class="n">' + vencidas + '</div></div></div>' +
-    '<div class="grid g2"><div class="card"><h4 style="margin-top:0">📝 Notas rápidas</h4>' + notaForm() + '<div id="listaNotas" style="margin-top:10px">' +
-    (todasLasNotas().slice(0, 10).map(notaHtml).join('') || '<div class="empty">Sin notas todavía</div>') + '</div></div>' +
+    '<div class="grid g2"><div class="card"><h4 style="margin-top:0">📝 Notas rápidas</h4>' + notaForm() + notasFiltroHtml() + '<div id="listaNotas" style="margin-top:10px">' +
+    (notasListaHtml() || '<div class="empty">Sin notas todavía</div>') + '</div></div>' +
     '<div style="display:flex;flex-direction:column;gap:14px"><div class="card"><h4 style="margin-top:0">⏰ Vencen pronto (7 días)</h4>' +
     (prox.map(t => '<div class="list-item"><a href="#" data-act="tarea-abrir" data-id="' + t.id + '">' + esc(t.titulo) + '</a><span class="small">' + chipProy(t.proyectoId) + ' ' + vencInfo(t) + '</span></div>').join('') || '<div class="empty">Nada por vencer</div>') + '</div>' +
     '<div class="card"><h4 style="margin-top:0">🚩 Próximos hitos</h4>' + (hitos.map(h => '<div class="list-item"><span>◆ ' + esc(h.nombre) + '</span><span class="small">' + chipProy(h.p.id) + ' ' + fmtF(h.fecha) + '</span></div>').join('') || '<div class="empty">Sin hitos pendientes</div>') + '</div>' +
