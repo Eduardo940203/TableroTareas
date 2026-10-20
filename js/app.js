@@ -412,7 +412,7 @@ function pintarColumnas() {
   const b = $('#board'); if (!b) return; const ts = tareasFiltradas();
   b.innerHTML = Store.config.columnas.map(c => {
     const l = ts.filter(t => t.estado === c.id).sort((a, b) => (a.orden ?? 9999) - (b.orden ?? 9999));
-    return '<div class="col" style="flex:0 0:' + anchoColumna(c) + 'px;width:' + anchoColumna(c) + 'px;min-width:0"><div class="col-head" style="--c:' + esc(c.color) + '"><span>' + esc(c.nombre) + ' <span class="muted">' + l.length + '</span></span></div><div class="col-body" data-col="' + c.id + '">' + l.map(cardHtml).join('') + '</div>' +
+    return '<div class="col" style="flex:0 0 ' + anchoColumna(c) + 'px;width:' + anchoColumna(c) + 'px;min-width:0"><div class="col-head" style="--c:' + esc(c.color) + '"><span>' + esc(c.nombre) + ' <span class="muted">' + l.length + '</span></span></div><div class="col-body" data-col="' + c.id + '">' + l.map(cardHtml).join('') + '</div>' +
       '<div class="quick"><input data-quick="' + c.id + '" placeholder="＋ Agregar tarea y Enter"></div></div>';
   }).join('');
 }

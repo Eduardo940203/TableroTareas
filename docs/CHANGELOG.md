@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## TableroTareas-v16.1
+
+Corrige la declaración flex de las columnas: flex:0 0:1200px era inválido; ahora se genera flex:0 0 1200px. Se conservan los valores de ancho guardados y el desplazamiento horizontal. No se modifican data/ ni recursos/. Validación automática: sintaxis JavaScript y sustitución del patrón incorrecto. Pendiente: prueba visual en navegador.
+
+
 ## TableroTareas-v16
 
 - Ancho (px) editable por columna en Configuración > Columnas del tablero.
