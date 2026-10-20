@@ -1,6 +1,13 @@
-/* v12: Gantt con tareas vencidas en rojo y tareas de proyecto desplegables.
-   Cargar después de app.js. */
+/* v12.1: Gantt con vencidas en rojo y tareas de proyecto desplegables estilo Gantt. */
 'use strict';
+
+ACTIONS['tareas-toggle'] = b => {
+  const list = $('#proyTareasList');
+  if (!list) return;
+  const open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : 'block';
+  b.textContent = open ? '＋ Mostrar tareas' : '− Ocultar tareas';
+};
 
 function vProyecto(params) {
   const p = Store.proy(params.get('id'));
@@ -17,10 +24,10 @@ function vProyecto(params) {
     '<div class="filters" style="margin-top:8px"><input id="hitoNombre" placeholder="Nuevo hito"><input id="hitoFecha" type="date"><button class="btn" data-act="hito-add" data-proy="' + p.id + '">Agregar</button></div></div>' +
     '<div class="card"><h4 style="margin-top:0">Notas del proyecto</h4>' + notaForm(p.id) + '<div style="margin-top:10px">' + (notas.map(n => notaHtml({ ...n, proyectoId: p.id })).join('') || '<div class="muted small">Sin notas</div>') + '</div></div>' +
     '<div class="card"><h4 style="margin-top:0">Adjuntos del proyecto</h4>' + ((p.adjuntos || []).map((x, i) => '<div class="list-item"><span>' + esc(x.nombre) + '</span><span class="muted small">' + fmtBytes(x.size) + '</span><button class="btn sm" data-act="ad-dl-proy" data-id="' + p.id + '" data-i="' + i + '">⬇</button></div>').join('') || '<div class="muted small">Sin adjuntos; agrégalos desde Editar.</div>') + '</div></div>' +
-    '<details class="card" id="proyTareasBox"><summary style="cursor:pointer"><div class="list-item" style="border:0;padding-top:0"><h4 style="margin:0">Tareas (' + ts.length + ')</h4><span class="muted small">' + a.hechas + '/' + a.total + ' terminadas</span></div></summary>' +
-    '<div class="list-item" style="border:0;padding:8px 0 0;justify-content:flex-end"><button class="btn sm primary" data-act="tarea-nueva" data-proy="' + p.id + '">＋ Tarea</button></div>' +
+    '<div class="card" id="proyTareasCard"><div class="list-item" style="border:0;padding-top:0"><h4 style="margin:0">Tareas (' + ts.length + ')</h4><span class="muted small">' + a.hechas + '/' + a.total + ' terminadas</span><button class="btn sm" data-act="tareas-toggle" data-proy="' + p.id + '">＋ Mostrar tareas</button><button class="btn sm primary" data-act="tarea-nueva" data-proy="' + p.id + '">＋ Tarea</button></div>' +
+    '<div id="proyTareasList" style="display:none">' +
     Store.config.columnas.map(c => { const l = ts.filter(t => t.estado === c.id); return l.length ? '<div class="side-title" style="margin-top:8px">' + esc(c.nombre) + ' (' + l.length + ')</div>' + l.map(t => '<div class="list-item"><a href="#" data-act="tarea-abrir" data-id="' + t.id + '" class="' + (t.archivada ? 'done-txt' : '') + '">' + esc(t.titulo) + '</a>' + (t.archivada ? '' : '<span class="small">' + chipPrio(t.prioridad) + ' ' + vencInfo(t) + '</span>') + '</div>').join('') : ''; }).join('') +
-    (ts.length ? '' : '<div class="empty">Sin tareas</div>') + '</details></div></div>';
+    (ts.length ? '' : '<div class="empty">Sin tareas</div>') + '</div></div></div></div>';
 }
 
 function vGantt(params) {
