@@ -407,11 +407,12 @@ function cardHtml(t) {
     ((t.adjuntos || []).length ? '<span>📎 ' + t.adjuntos.length + '</span>' : '') + (t.responsable ? '<span>👤 ' + esc(t.responsable) + '</span>' : '') +
     (Store.esTerminal(t.estado) ? '<button class="btn sm" data-act="archivar" data-id="' + t.id + '">📦</button>' : '') + '</div></div>';
 }
+function anchoColumna(c) { const n = Number(c.ancho); return Number.isInteger(n) && n >= 200 && n <= 1200 ? n : 300; }
 function pintarColumnas() {
   const b = $('#board'); if (!b) return; const ts = tareasFiltradas();
   b.innerHTML = Store.config.columnas.map(c => {
     const l = ts.filter(t => t.estado === c.id).sort((a, b) => (a.orden ?? 9999) - (b.orden ?? 9999));
-    return '<div class="col"><div class="col-head" style="--c:' + esc(c.color) + '"><span>' + esc(c.nombre) + ' <span class="muted">' + l.length + '</span></span></div><div class="col-body" data-col="' + c.id + '">' + l.map(cardHtml).join('') + '</div>' +
+    return '<div class="col" style="flex:0 0:' + anchoColumna(c) + 'px;width:' + anchoColumna(c) + 'px;min-width:0"><div class="col-head" style="--c:' + esc(c.color) + '"><span>' + esc(c.nombre) + ' <span class="muted">' + l.length + '</span></span></div><div class="col-body" data-col="' + c.id + '">' + l.map(cardHtml).join('') + '</div>' +
       '<div class="quick"><input data-quick="' + c.id + '" placeholder="＋ Agregar tarea y Enter"></div></div>';
   }).join('');
 }
@@ -537,9 +538,20 @@ function vConfig() {
   pintarCols();
 }
 function pintarCols() {
-  $('#colsEd').innerHTML = '<table><thead><tr><th>Nombre</th><th>Color</th><th>Terminal</th><th></th></tr></thead><tbody>' + COLS.map((c, i) => '<tr data-cid="' + c.id + '"><td><input class="c-n" value="' + esc(c.nombre) + '"></td><td><input class="c-c" type="color" value="' + esc(c.color) + '"></td><td><input class="c-t" type="checkbox"' + (c.terminal ? ' checked' : '') + '></td><td style="white-space:nowrap"><button class="btn sm" data-act="col-up" data-i="' + i + '">↑</button> <button class="btn sm" data-act="col-down" data-i="' + i + '">↓</button> <button class="btn sm danger" data-act="col-del" data-i="' + i + '">✕</button></td></tr>').join('') + '</tbody></table>';
+  $('#colsEd').innerHTML = '<table><thead><tr><th>Nombre</th><th>Color</th><th>Ancho (px)</th><th>Terminal</th><th></th></tr></thead><tbody>' + COLS.map((c, i) => '<tr data-cid="' + c.id + '"><td><input class="c-n" value="' + esc(c.nombre) + '"></td><td><input class="c-c" type="color" value="' + esc(c.color) + '"></td><td><input class="c-w" type="number" min="200" max="1200" step="1" required aria-label="Ancho de columna en píxeles" value="' + anchoColumna(c) + '" style="width:110px"></td><td><input class="c-t" type="checkbox"' + (c.terminal ? ' checked' : '') + '></td><td style="white-space:nowrap"><button class="btn sm" data-act="col-up" data-i="' + i + '">↑</button> <button class="btn sm" data-act="col-down" data-i="' + i + '">↓</button> <button class="btn sm danger" data-act="col-del" data-i="' + i + '">✕</button></td></tr>').join('') + '</tbody></table>';
 }
-function leerCols() { COLS = $$('#colsEd tbody tr').map(tr => ({ id: tr.dataset.cid, nombre: $('.c-n', tr).value.trim(), color: $('.c-c', tr).value, terminal: $('.c-t', tr).checked })); }
+function leerCols() {
+  const previous = new Map(COLS.map(c => [c.id, c]));
+  const next = $$('#colsEd tbody tr').map(tr => {
+    const field = $('.c-w', tr), n = Number(field.value);
+    if (!field.value.trim() || !Number.isInteger(n) || n < 200 || n > 1200) {
+      field.focus();
+      throw new Error('El ancho de cada columna debe ser un entero entre 200 y 1200 px.');
+    }
+    return { ...previous.get(tr.dataset.cid), id: tr.dataset.cid, nombre: $('.c-n', tr).value.trim(), color: $('.c-c', tr).value, ancho: n, terminal: $('.c-t', tr).checked };
+  });
+  COLS = next;
+}
 
 /* ---------- Modales ---------- */
 const adjHtml = () => (M.obj.adjuntos || []).map((a, i) => '<div class="check-row"><span style="flex:1">📎 ' + esc(a.nombre) + ' <span class="muted small">' + fmtBytes(a.size) + (a.file ? ' · pendiente de guardar' : '') + '</span></span><button type="button" class="btn sm" data-act="ad-dl" data-i="' + i + '">⬇</button><button type="button" class="btn sm danger" data-act="ad-rm" data-i="' + i + '">✕</button></div>').join('') || '<div class="muted small">Sin adjuntos</div>';

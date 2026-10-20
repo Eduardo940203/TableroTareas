@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## TableroTareas-v16
+
+- Ancho (px) editable por columna en Configuración > Columnas del tablero.
+- Valores enteros de 200 a 1200 px; 300 px para configuraciones anteriores y columnas nuevas.
+- Se guarda ancho junto con cada columna mediante Guardar columnas y se aplica al renderizar el tablero.
+- Se conserva al editar, reordenar y añadir columnas; el lector mantiene propiedades adicionales.
+- Se conserva el scroll horizontal y el arrastre existente. No modifica tareas, adjuntos, Gantt ni presentaciones.
+- Pruebas automáticas: sintaxis JS, valores predeterminados, límites y serialización JSON. Pendiente: prueba visual y guardado real en navegador.
+
 ## TableroTareas-v15
 
 Reorganización sin cambios funcionales intencionales. JavaScript en js/, estilos en css/ y documentación en docs/. Se conserva el orden de ejecución y de las reglas CSS; los módulos históricos de presentaciones se integran, no se descartan sus dependencias. Se elimina mejoras-v12.js no cargado por index.html. data/ y recursos/ no se modifican.
