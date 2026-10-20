@@ -79,3 +79,4 @@
   // Expuesto para pruebas automatizadas sin descargar ni modificar datos.
   window.TableroPpt={build};
 })();
+

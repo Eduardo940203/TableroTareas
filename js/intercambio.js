@@ -277,3 +277,4 @@ function intercambioHtml() {
     '<div class="filters" style="margin-top:8px"><button class="btn" data-act="exp-xlsx">⬇ Exportar a Excel</button><label class="btn">⬆ Importar desde Excel<input type="file" id="fileImpXlsx" accept=".xlsx" hidden></label></div>' +
     '<p class="muted small">Project: guarda/abre en formato <b>XML (MSPDI)</b>, no .mpp. Cada proyecto es una tarea resumen; sus hitos son hitos de Project. Las tareas sin fechas se exportan con la fecha del proyecto u hoy. Al importar se actualiza por ID o por título y nunca se elimina nada. Adjuntos, conexiones y checklist (solo Excel) no viajan por Project.</p></div>';
 }
+
