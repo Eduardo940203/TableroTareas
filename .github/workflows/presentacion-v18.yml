@@ -1,0 +1,88 @@
+name: Gantt completo por niveles v18
+on:
+  push:
+    branches: [TableroTareas-v18]
+    paths: [.github/workflows/presentacion-v18.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  actualizar:
+    if: github.ref == 'refs/heads/TableroTareas-v18'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v18
+      - name: Ajustar fechas, filas, escala y validar
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess,re
+          p=Path('js/presentaciones.js')
+          source=p.read_text(encoding='utf-8')
+          if 'function rangoGantt(a,b)' in source:
+              assert 'g.ganttStart=dates[0]' in source
+              raise SystemExit(0)
+          marker='/* v11.1:'
+          assert source.count(marker)==1
+          prefix,active=source.split(marker,1)
+          def once(old,new):
+              global active
+              assert active.count(old)==1, 'Patrón inesperado: '+old[:100]
+              active=active.replace(old,new,1)
+          once('function model(o){', "function rangoGantt(a,b){const s=valid(a)?a:'',e=valid(b)?b:'';return s&&e&&e<s?['','']:[s||e,e||s];}\nfunction model(o){")
+          once('const ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(h=>belongs(h)&&base.overlap(h.fecha,h.fecha,o.from,o.cut));', 'const ganttTasks=allTasks.filter(belongs),ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(belongs);')
+          phase_start=active.index('   const phaseRow=(f,depth)=>')
+          phase_end=active.index('\n   const visit=',phase_start)
+          phase="   const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ganttTasks.filter(t=>ds.has(t.faseId)),dates=child.flatMap(t=>rangoGantt(t.inicio,t.vence)).filter(valid).sort(),r=dates.length?[dates[0],dates[dates.length-1]]:rangoGantt(f.inicio,f.fin);rows.push({kind:'fase',name:f.nombre,depth,start:r[0],end:r[1],pct:prog('fase',f,child)});};"
+          active=active[:phase_start]+phase+active[phase_end:]
+          once("for(const t of ts.filter(x=>direct(x,f?.id)))rows.push({kind:'tarea',name:t.titulo,depth:td,start:t.inicio,end:t.vence,pct:prog('tarea',t),late:!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<o.cut});", "for(const t of ganttTasks.filter(x=>direct(x,f?.id))){const r=rangoGantt(t.inicio,t.vence);rows.push({kind:'tarea',name:t.titulo,depth:td,start:r[0],end:r[1],pct:prog('tarea',t),late:!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<HOY()});}")
+          once(" if(!out.length)throw Error('Selecciona al menos una fase válida.');\n return out;", " if(!out.length)throw Error('Selecciona al menos una fase válida.');\n const dates=out.flatMap(g=>g.rows.flatMap(r=>[r.start,r.end])).filter(valid).sort();\n for(const g of out){g.ganttStart=dates[0]||'';g.ganttEnd=dates[dates.length-1]||'';}\n return out;")
+          once("const g=s.g;let id=1,body='';const E=n=>Math.round(n*914400),days=diffDays(o.from,o.cut)+1;", "const g=s.g,start=g.ganttStart,end=g.ganttEnd;let id=1,body='';const E=n=>Math.round(n*914400),days=start&&end?diffDays(start,end)+1:1;")
+          once('for(let n=0;n<=4;n++)text(date(addDays(o.from,Math.round((days-1)*n/4))),7.6+4.6*n/4,y+0.11,0.9,0.2,8);', 'if(start&&end)for(let n=0;n<=4;n++)text(date(addDays(start,Math.round((days-1)*n/4))),7.6+4.6*n/4,y+0.11,0.9,0.2,8);')
+          once("if(base.overlap(a,b,o.from,o.cut)){const st=a<o.from?o.from:a,en=b>o.cut?o.cut:b,bx=7.65+5.05*diffDays(o.from,st)/days,bw=Math.max(0.025,5.05*(diffDays(st,en)+1)/days);rect(bx,ry+0.07,bw,0.13,'CBD5E1');if(r.pct!==null&&r.pct>0)rect(bx,ry+0.07,bw*r.pct/100,0.13,c);}", "if(start&&end&&valid(a)&&valid(b)&&b>=a){const bx=7.65+5.05*diffDays(start,a)/days,bw=Math.min(12.7-bx,Math.max(0.025,5.05*(diffDays(a,b)+1)/days));rect(bx,ry+0.07,bw,0.13,r.late?'DC2626':'CBD5E1');if(r.pct!==null&&r.pct>0)rect(bx,ry+0.07,bw*r.pct/100,0.13,c);}")
+          once("else text('Sin rango visible'", "else text('Sin fechas válidas'")
+          once("c=r.kind==='fase'?'339966':r.pct===100?'16A34A':r.late?'DC2626':'2563EB'", "c=r.late?'DC2626':r.kind==='fase'?'339966':r.pct===100?'16A34A':'2563EB'")
+          once("text(date(o.from)+' → '+date(o.cut)+' · '+(o.mode==='project'?'% Project original':'% tablero actual (todas las tareas)')", "text('Seguimiento: '+date(o.from)+' → '+date(o.cut)+' · '+(o.mode==='project'?'% Project original':'% tablero actual (todas las tareas)')")
+          hint='<p class="small muted">El Gantt respeta los niveles elegidos y muestra todas las tareas y los hitos de esos niveles sin filtro de período. Sus fechas y porcentajes se calculan con las tareas de cada fase; el eje abarca sus rangos completos. El período solo filtra Actividades terminadas, Siguientes pasos y Tareas vencidas. Se respeta la opción de archivadas. Sin fechas válidas no se inventa un rango.</p>'
+          active,count=re.subn(r'<p class="small muted">El Gantt[\s\S]*?</p>',hint,active,count=1)
+          assert count==1
+          once('version:11','version:18')
+          source=prefix+marker+active
+          subprocess.run(['node','--check'],input=source,text=True,check=True)
+          test=r'''
+          const vm=require('vm'),assert=require('node:assert/strict'),source=require('fs').readFileSync(0,'utf8');
+          const phases=[{id:'f',nombre:'Raiz',inicio:'2025-01-01',fin:'2028-12-31',origen:{porcentaje:37}},{id:'h',padreId:'f',nombre:'Historica'},{id:'c',padreId:'f',nombre:'Actual'},{id:'z',padreId:'f',nombre:'Futura'}];
+          const t=(id,faseId,inicio,vence,estado,items)=>({id,titulo:id,proyectoId:'p',faseId,inicio,vence,estado,checklist:items.map(hecho=>({hecho}))});
+          const tasks=[t('Pasada','h','2026-04-01','2026-04-10','proceso',[true,false]),t('Presente','c','2026-10-01','2026-10-15','done',[]),t('Futuro','z','2026-11-01','2026-11-15','activo',[]),t('SinFecha','h','','','proceso',[true,false])];
+          const ctx={window:{TableroPpt:{build(){},overlap:(a,b,f,c)=>!!(a||b)&&(a||b)<=c&&(b||a)>=f}},document:{addEventListener(){},getElementById(){return null;},body:{}},MutationObserver:class{observe(){}},Store:{proyectos:[{id:'p',nombre:'P',fases:phases,hitos:[],notas:[]}],tareas:tasks,saveProyecto(){},proy(){},esTerminal:s=>s==='done'},GanttV7:{descendants:(p,id)=>new Set([id,...p.fases.filter(f=>f.padreId===id).map(f=>f.id)])},parseD:s=>new Date(s+'T00:00:00Z'),isoD:d=>d.toISOString().slice(0,10),fmtF:s=>s,HOY:()=> '2026-10-20',diffDays:(a,b)=>(new Date(b)-new Date(a))/86400000,addDays:(s,n)=>new Date(new Date(s).getTime()+n*86400000).toISOString().slice(0,10)};
+          vm.createContext(ctx);vm.runInContext(source,ctx);
+          const o={from:'2026-10-01',cut:'2026-10-20',selected:[{pid:'p',id:'f'}],levels:3,mode:'tablero',title:'Prueba'},api=ctx.window.TableroPpt;
+          const g=api.model(o)[0];assert.equal(g.pct,50);assert.equal(g.ts.length,1);assert.equal(g.done.length,1);assert.equal(g.ganttStart,'2026-04-01');assert.equal(g.ganttEnd,'2026-11-15');assert.equal(g.rows.find(r=>r.name==='Raiz').start,'2026-04-01');assert.equal(g.rows.find(r=>r.name==='Raiz').end,'2026-11-15');assert.equal(g.rows.find(r=>r.name==='Historica').pct,50);assert(g.rows.some(r=>r.name==='Pasada'));assert(g.rows.some(r=>r.name==='Futuro'));
+          const other=api.model({...o,from:'2027-01-01',cut:'2027-01-20'})[0];assert.equal(other.ts.length,0);assert.equal(JSON.stringify(other.rows),JSON.stringify(g.rows));assert.equal(other.ganttStart,g.ganttStart);
+          const shallow=api.model({...o,levels:1})[0];assert.equal(shallow.rows.length,1);assert.equal(shallow.pct,50);
+          const steps=api.plan(g),xml=steps.map((s,i)=>api.render(s,i,steps.length,o)).join('\n');assert(!xml.includes('Sin rango visible'));assert(xml.includes('Sin fechas válidas'));assert(xml.includes('2026-04-01'));assert(xml.includes('2026-11-15'));assert.equal(api.model({...o,mode:'project'})[0].pct,37);
+          console.log('PASS: Gantt completo, fechas por nivel, porcentajes, escala, niveles, seguimiento y Project.');
+          '''
+          subprocess.run(['node','-e',test],input=source,text=True,check=True)
+          p.write_text(source,encoding='utf-8')
+          index=Path('index.html')
+          html=index.read_text(encoding='utf-8')
+          assert html.count('content="TableroTareas-v17.1"')==1
+          index.write_text(html.replace('content="TableroTareas-v17.1"','content="TableroTareas-v18"'),encoding='utf-8')
+          log=Path('docs/CHANGELOG.md')
+          title,sep,rest=log.read_text(encoding='utf-8').partition('\n')
+          entry='\n## TableroTareas-v18\n\n- Gantt de presentación independiente del período: tareas e hitos visibles según niveles, sin excluir fechas anteriores o posteriores.\n- Fases/subfases: inicio mínimo y fin máximo de sus tareas descendientes; si no hay fechas de tareas, usa las fechas propias. Una fecha única representa un día; fechas invertidas no generan una barra.\n- Eje global de la selección según las filas y los rangos agregados, igual en todas sus diapositivas; barras completas y relleno proporcional al porcentaje actual.\n- Solo Actividades terminadas, Siguientes pasos y Tareas vencidas usan el período. Notas y Gantt no se filtran por período.\n- Conserva avance por checklist, agregación por tareas, modo Project original y opción de archivadas. Vencimiento visual del Gantt según fecha actual.\n- Sin rango visible se sustituye por Sin fechas válidas únicamente cuando faltan fechas o están invertidas.\n- Pruebas: sintaxis y modelo/render con tareas pasadas, presentes, futuras, sin fecha, diferentes niveles y cambio de período. Pendiente validación visual real y regresión integral en navegador/PowerPoint.\n- No modifica tareas, checklists, fechas almacenadas ni adjuntos.\n\n'
+          log.write_text(title+'\n'+entry+rest,encoding='utf-8')
+          PY
+      - name: Publicar solo en v18
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/presentaciones.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'v18: Gantt completo por niveles con fechas y avance independientes del período'
+          git push origin HEAD:TableroTareas-v18
