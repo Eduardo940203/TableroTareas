@@ -1,9 +1,9 @@
-/* v11: notas por fase, niveles configurables, selector jerárquico y Gantt como primera sección. */
+/* v11 modificado: Gantt con todas las fases/subfases; niveles aplican a actividades, siguientes pasos y vencidas. */
 (() => {
 'use strict';
 const base=window.TableroPpt,A='http://schemas.openxmlformats.org/drawingml/2006/main',P='http://schemas.openxmlformats.org/presentationml/2006/main',R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const xml=s=>'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+s;
-const X=s=>String(s??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const X=s=>String(s??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const valid=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'')&&Number.isFinite(parseD(s).getTime())&&isoD(parseD(s))===s;
 const date=s=>valid(s)?fmtF(s):'Sin fecha',pct=n=>n===null?'N/D':n+'%';
@@ -15,7 +15,6 @@ function chunks(a,n){const out=[];for(let i=0;i<a.length;i+=n)out.push(a.slice(i
 function path(p,id){const a=[],seen=new Set();while(id&&!seen.has(id)){seen.add(id);const f=(p.fases||[]).find(x=>x.id===id);if(!f)break;a.unshift(f.nombre);id=f.padreId;}return a.join(' > ');}
 function parseNotes(text,existing){const old=existing||[];return String(text||'').split(/\r?\n[ \t]*\r?\n/).map(s=>s.trim()).filter(Boolean).map(t=>old.find(n=>n.texto===t)||{id:uid('n'),texto:t,fecha:new Date().toISOString()});}
 
-/* ---------- Notas por fase: edición dentro de la ventana de fase del Gantt ---------- */
 let lastPhase=null,pending=null;
 document.addEventListener('click',e=>{
  const t=e.target.closest?.('[data-g7edit]');
@@ -36,7 +35,6 @@ Store.saveProyecto=async function(p,removed){
  return saveProject(p,removed);
 };
 
-/* ---------- Modelo ---------- */
 function model(o){
  if(!valid(o.from)||!valid(o.cut)||o.from>o.cut)throw Error('Indica un período válido: el inicio no puede ser posterior al corte.');
  if(!o.selected?.length)throw Error('Selecciona al menos una fase.');
@@ -49,13 +47,12 @@ function model(o){
    const root=fs.find(f=>f.id===id);if(id&&!root)continue;
    const ids=id?GanttV7.descendants(p,id):new Set(),belongs=t=>id?ids.has(t.faseId):!fs.some(f=>f.id===t.faseId);
    const ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(h=>belongs(h)&&base.overlap(h.fecha,h.fecha,o.from,o.cut));
-   if(!ts.length&&!hs.length)continue;
    const prog=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(100*list.filter(t=>Store.esTerminal(t.estado)).length/list.length):0):kind==='hito'?(obj.hecho?100:0):(Store.esTerminal(obj.estado)?100:0);
    const rows=[],direct=(x,fid)=>fid?x.faseId===fid:!fs.some(f=>f.id===x.faseId);
-   const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ts.filter(t=>ds.has(t.faseId)),hit=hs.filter(h=>ds.has(h.faseId));if(!child.length&&!hit.length)return;const dates=[...child.flatMap(t=>[t.inicio,t.vence]),...hit.map(h=>h.fecha)].filter(valid).sort();rows.push({kind:'fase',name:f.nombre,depth,start:f.inicio||dates[0],end:f.fin||dates[dates.length-1],pct:prog('fase',f,child)});};
+   const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ts.filter(t=>ds.has(t.faseId)),hit=hs.filter(h=>ds.has(h.faseId));const dates=[...child.flatMap(t=>[t.inicio,t.vence]),...hit.map(h=>h.fecha)].filter(valid).sort();rows.push({kind:'fase',name:f.nombre,depth,start:f.inicio||dates[0],end:f.fin||dates[dates.length-1],pct:prog('fase',f,child)});};
    const visit=(f,depth)=>{
     if(f)phaseRow(f,depth);
-    if(f&&depth+1<levels)for(const c of sorted(fs.filter(x=>x.padreId===f.id)))visit(c,depth+1);
+    if(f)for(const c of sorted(fs.filter(x=>x.padreId===f.id)))visit(c,depth+1);
     const td=f?depth+1:depth;
     if(td<levels){
      for(const t of ts.filter(x=>direct(x,f?.id)))rows.push({kind:'tarea',name:t.titulo,depth:td,start:t.inicio,end:t.vence,pct:prog('tarea',t),late:!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<o.cut});
@@ -71,11 +68,10 @@ function model(o){
     done:ts.filter(t=>Store.esTerminal(t.estado)),next:ts.filter(t=>!Store.esTerminal(t.estado)&&(!valid(t.vence)||t.vence>=o.cut)),late:ts.filter(t=>!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<o.cut)});
   }
  }
- if(!out.length)throw Error('No hay tareas ni hitos con actividad durante el período seleccionado.');
+ if(!out.length)throw Error('Selecciona al menos una fase válida.');
  return out;
 }
 
-/* ---------- Planeación: el Gantt va primero y se pagina; el seguimiento cabe debajo o continúa ---------- */
 function rowLayout(r){const lines=wrap(r.name,Math.max(28,52-3*r.depth));return {r,lines,h:Math.max(0.26,lines.length*LH+0.07)};}
 function packItems(items,L){
  const pieces=items.flatMap(it=>it.length>L?chunks(it,L):[it]),pages=[];let cur=[],n=0;
@@ -99,7 +95,6 @@ function plan(g){
  return steps;
 }
 
-/* ---------- Dibujo ---------- */
 const COLS=['Actividades terminadas','Siguientes pasos','Tareas vencidas','Notas'];
 function render(s,index,total,o){
  const g=s.g;let id=1,body='';const E=n=>Math.round(n*914400),days=diffDays(o.from,o.cut)+1;
@@ -143,7 +138,6 @@ function build(o){
  return result;
 }
 
-/* ---------- Selector jerárquico de fases ---------- */
 function tree(pid){
  const nodes=[];
  for(const p of Store.proyectos.filter(p=>!pid||p.id===pid).sort((a,b)=>a.nombre.localeCompare(b.nombre))){
@@ -164,7 +158,7 @@ function view(nodes,expanded,selected,query){
  return nodes.filter(shown).map(n=>({n,covered:n.kind==='fase'&&covered(n),checked:selected.has(n.key),kids:n.kind==='fase'&&(kids.get(n.key)||[]).length>0,open:!!q||expanded.has(n.key),match:match.has(n.key)}));
 }
 function dialog(pid){
- openModal(`<h4>Generar presentación PowerPoint</h4><div class="form-grid"><div class="full"><label>Título</label><input id="v11Title" value="Seguimiento de proyectos"></div><div class="full"><label>Proyecto</label><select id="v11Pid">${opcionesProy(pid,'Todo el tablero')}</select></div><div class="full"><h4>Periodo y Selección</h4></div><div><label>Fecha inicio del período</label><input id="v11From" type="date" value="${HOY().slice(0,8)}01"></div><div><label>Fecha de corte</label><input id="v11Cut" type="date" value="${HOY()}"></div><div class="full"><button type="button" class="btn" id="v11Toggle" style="width:100%;text-align:left"></button><div id="v11Panel" style="display:none;border:1px solid #94a3b8;padding:8px;margin-top:6px"><input id="v11Search" placeholder="Buscar fase o subfase"><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button type="button" class="btn sm" id="v11Expand">Expandir</button><button type="button" class="btn sm" id="v11Collapse">Contraer</button><button type="button" class="btn sm" id="v11All">Marcar visibles</button><button type="button" class="btn sm" id="v11None">Limpiar selección</button></div><div id="v11List" style="max-height:240px;overflow:auto"></div></div></div><div><label>Niveles a mostrar en el Gantt</label><select id="v11Levels"><option value="1">1 nivel (solo la fase)</option><option value="2" selected>2 niveles</option><option value="3">3 niveles</option><option value="4">4 niveles</option><option value="5">5 niveles</option><option value="6">6 niveles</option><option value="99">Todos los niveles</option></select></div><div><label>Origen del avance</label><select id="v11Mode"><option value="tablero">Tablero: tareas del período</option><option value="project">Project original: última importación</option></select></div><div class="full"><label style="display:flex;gap:8px"><input type="checkbox" id="v11Notes" checked style="width:auto">Incluir notas (proyecto y fase)</label><label style="display:flex;gap:8px"><input type="checkbox" id="v11Arch" style="width:auto">Incluir tareas archivadas</label></div></div><p class="small muted">El Gantt es la primera sección de cada fase y continúa en más diapositivas si es necesario; el seguimiento va debajo cuando cabe o en diapositivas siguientes. Una fase superior incluye sus subfases. Las tareas se incluyen si su actividad cruza el período.</p><div class="modal-foot"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn primary" id="v11Download">Generar .pptx</button></div>`,true);
+ openModal(`<h4>Generar presentación PowerPoint</h4><div class="form-grid"><div class="full"><label>Título</label><input id="v11Title" value="Seguimiento de proyectos"></div><div class="full"><label>Proyecto</label><select id="v11Pid">${opcionesProy(pid,'Todo el tablero')}</select></div><div class="full"><h4>Periodo y Selección</h4></div><div><label>Fecha inicio del período</label><input id="v11From" type="date" value="${HOY().slice(0,8)}01"></div><div><label>Fecha de corte</label><input id="v11Cut" type="date" value="${HOY()}"></div><div class="full"><button type="button" class="btn" id="v11Toggle" style="width:100%;text-align:left"></button><div id="v11Panel" style="display:none;border:1px solid #94a3b8;padding:8px;margin-top:6px"><input id="v11Search" placeholder="Buscar fase o subfase"><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button type="button" class="btn sm" id="v11Expand">Expandir</button><button type="button" class="btn sm" id="v11Collapse">Contraer</button><button type="button" class="btn sm" id="v11All">Marcar visibles</button><button type="button" class="btn sm" id="v11None">Limpiar selección</button></div><div id="v11List" style="max-height:240px;overflow:auto"></div></div></div><div><label>Niveles a mostrar en el Gantt</label><select id="v11Levels"><option value="1">1 nivel (solo la fase)</option><option value="2" selected>2 niveles</option><option value="3">3 niveles</option><option value="4">4 niveles</option><option value="5">5 niveles</option><option value="6">6 niveles</option><option value="99">Todos los niveles</option></select></div><div><label>Origen del avance</label><select id="v11Mode"><option value="tablero">Tablero: tareas del período</option><option value="project">Project original: última importación</option></select></div><div class="full"><label style="display:flex;gap:8px"><input type="checkbox" id="v11Notes" checked style="width:auto">Incluir notas (proyecto y fase)</label><label style="display:flex;gap:8px"><input type="checkbox" id="v11Arch" style="width:auto">Incluir tareas archivadas</label></div></div><p class="small muted">El Gantt incluye todas las fases y subfases seleccionadas, aunque estén fuera del período. Las actividades, siguientes pasos y tareas vencidas sí respetan el período y los niveles configurados. El seguimiento va debajo cuando cabe o en diapositivas siguientes.</p><div class="modal-foot"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn primary" id="v11Download">Generar .pptx</button></div>`,true);
  const el=id=>document.getElementById(id);let nodes=[],expanded=new Set(),selected=new Set(),open=false;
  const paint=()=>{
   const v=view(nodes,expanded,selected,el('v11Search').value);
