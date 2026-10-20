@@ -1,0 +1,11 @@
+.hg7{max-height:70vh;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.hg7-row{display:flex;width:max-content;min-width:100%;height:54px}
+.hg7-label{position:sticky;left:0;z-index:3;background:var(--card);width:400px;flex:0 0 400px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 8px;overflow:hidden}
+.hg7-label>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hg7-track{position:relative;flex-shrink:0;border-bottom:1px solid var(--border);background-image:linear-gradient(to right,var(--grid) 1px,transparent 1px)}
+.hg7-header{position:sticky;top:0;z-index:5;height:32px;background:var(--card);font-size:11px}
+.hg7-name{border:0;background:none;color:var(--text);font:inherit;cursor:pointer;text-align:left}
+.hg7-bar{position:absolute;top:15px;height:20px;border:0;border-radius:5px;background:var(--bc);cursor:pointer;overflow:hidden;padding:0}
+.hg7-bar>span{display:block;height:100%;background:rgba(0,0,0,.35)}
+.hg7-diamond{position:absolute;top:18px;width:14px;height:14px;background:var(--warn);transform:rotate(45deg)}
+@media(max-width:650px){.hg7-label{width:250px;flex-basis:250px}}
