@@ -1,0 +1,78 @@
+name: Anchos de columnas v16
+on:
+  push:
+    branches: [TableroTareas-v16]
+    paths: [.github/workflows/anchos-v16.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  actualizar:
+    if: github.ref == 'refs/heads/TableroTareas-v16'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v16
+      - name: Aplicar y validar anchos
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          p = Path('js/app.js')
+          source = p.read_text(encoding='utf-8')
+          if 'function anchoColumna(c)' in source:
+              print('v16 ya aplicada.')
+              raise SystemExit(0)
+          def change(old, new):
+              global source
+              assert source.count(old) == 1, 'Patrón inesperado: ' + old[:100]
+              source = source.replace(old, new, 1)
+          helper = "function anchoColumna(c) { const n = Number(c.ancho); return Number.isInteger(n) && n >= 200 && n <= 1200 ? n : 300; }\n"
+          change('function pintarColumnas() {', helper + 'function pintarColumnas() {')
+          change('<th>Nombre</th><th>Color</th><th>Terminal</th>', '<th>Nombre</th><th>Color</th><th>Ancho (px)</th><th>Terminal</th>')
+          old_cell = '<td><input class="c-t" type="checkbox"'
+          new_cell = '''<td><input class="c-w" type="number" min="200" max="1200" step="1" required aria-label="Ancho de columna en píxeles" value="' + anchoColumna(c) + '" style="width:110px"></td><td><input class="c-t" type="checkbox"'''
+          change(old_cell, new_cell)
+          old_reader = "function leerCols() { COLS = $$('#colsEd tbody tr').map(tr => ({ id: tr.dataset.cid, nombre: $('.c-n', tr).value.trim(), color: $('.c-c', tr).value, terminal: $('.c-t', tr).checked })); }"
+          new_reader = """function leerCols() {
+            const previous = new Map(COLS.map(c => [c.id, c]));
+            const next = $$('#colsEd tbody tr').map(tr => {
+              const field = $('.c-w', tr), n = Number(field.value);
+              if (!field.value.trim() || !Number.isInteger(n) || n < 200 || n > 1200) {
+                field.focus();
+                throw new Error('El ancho de cada columna debe ser un entero entre 200 y 1200 px.');
+              }
+              return { ...previous.get(tr.dataset.cid), id: tr.dataset.cid, nombre: $('.c-n', tr).value.trim(), color: $('.c-c', tr).value, ancho: n, terminal: $('.c-t', tr).checked };
+            });
+            COLS = next;
+          }"""
+          change(old_reader, new_reader)
+          old_board = '''return '<div class="col"><div class="col-head"'''
+          new_board = '''return '<div class="col" style="flex:0 0:' + anchoColumna(c) + 'px;width:' + anchoColumna(c) + 'px;min-width:0"><div class="col-head"'''
+          change(old_board, new_board)
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          assert 'content="TableroTareas-v15"' in html
+          html = html.replace('content="TableroTareas-v15"', 'content="TableroTareas-v16"')
+          subprocess.run(['node','--check'], input=source, text=True, check=True)
+          test = helper + "const assert = require('node:assert/strict'); for (const n of [200,300,480,1200]) assert.equal(anchoColumna({ancho:n}),n); for (const n of [undefined,null,'',0,199,1201,250.5,'abc']) assert.equal(anchoColumna({ancho:n}),300); const c={id:'activo',ancho:480}; assert.equal(JSON.parse(JSON.stringify(c)).ancho,480); console.log('PASS: valores predeterminados, límites y serialización');"
+          subprocess.run(['node','-e',test], check=True)
+          p.write_text(source, encoding='utf-8')
+          index.write_text(html, encoding='utf-8')
+          changelog = Path('docs/CHANGELOG.md')
+          history = changelog.read_text(encoding='utf-8')
+          entry = '\n## TableroTareas-v16\n\n- Ancho (px) editable por columna en Configuración > Columnas del tablero.\n- Valores enteros de 200 a 1200 px; 300 px para configuraciones anteriores y columnas nuevas.\n- Se guarda ancho junto con cada columna mediante Guardar columnas y se aplica al renderizar el tablero.\n- Se conserva al editar, reordenar y añadir columnas; el lector mantiene propiedades adicionales.\n- Se conserva el scroll horizontal y el arrastre existente. No modifica tareas, adjuntos, Gantt ni presentaciones.\n- Pruebas automáticas: sintaxis JS, valores predeterminados, límites y serialización JSON. Pendiente: prueba visual y guardado real en navegador.\n'
+          title, sep, rest = history.partition('\n')
+          changelog.write_text(title + '\n' + entry + rest, encoding='utf-8')
+          PY
+      - name: Publicar solo en v16
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/app.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'v16: permitir configurar el ancho de cada columna del tablero'
+          git push origin HEAD:TableroTareas-v16
