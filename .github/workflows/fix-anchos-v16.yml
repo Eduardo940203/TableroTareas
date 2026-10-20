@@ -1,0 +1,52 @@
+name: Corregir ancho de columnas v16.1
+on:
+  push:
+    branches: [TableroTareas-v16]
+    paths: [.github/workflows/fix-anchos-v16.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  corregir:
+    if: github.ref == 'refs/heads/TableroTareas-v16'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v16
+      - name: Corregir y validar
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          p = Path('js/app.js')
+          source = p.read_text(encoding='utf-8')
+          old = "flex:0 0:' + anchoColumna(c)"
+          new = "flex:0 0 ' + anchoColumna(c)"
+          if old not in source and new in source:
+              print('Corrección ya aplicada.')
+              raise SystemExit(0)
+          assert source.count(old) == 1, 'Patrón de ancho inesperado.'
+          source = source.replace(old, new, 1)
+          subprocess.run(['node','--check'], input=source, text=True, check=True)
+          assert old not in source and new in source
+          p.write_text(source, encoding='utf-8')
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          assert 'content="TableroTareas-v16"' in html
+          index.write_text(html.replace('content="TableroTareas-v16"', 'content="TableroTareas-v16.1"'), encoding='utf-8')
+          log = Path('docs/CHANGELOG.md')
+          title, sep, rest = log.read_text(encoding='utf-8').partition('\n')
+          entry = '\n## TableroTareas-v16.1\n\nCorrige la declaración flex de las columnas: flex:0 0:1200px era inválido; ahora se genera flex:0 0 1200px. Se conservan los valores de ancho guardados y el desplazamiento horizontal. No se modifican data/ ni recursos/. Validación automática: sintaxis JavaScript y sustitución del patrón incorrecto. Pendiente: prueba visual en navegador.\n\n'
+          log.write_text(title + '\n' + entry + rest, encoding='utf-8')
+          PY
+      - name: Publicar corrección solo en v16
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/app.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix v16.1: aplicar correctamente el ancho configurado de las columnas'
+          git push origin HEAD:TableroTareas-v16
