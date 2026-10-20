@@ -1,0 +1,101 @@
+name: Consolidar TableroTareas v15
+on:
+  push:
+    branches: [TableroTareas-v15]
+    paths: [.github/workflows/consolidar-v15.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  consolidar:
+    if: github.ref == 'refs/heads/TableroTareas-v15'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v15
+      - name: Consolidar y validar
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re, subprocess, json
+          root = Path('.')
+          index = root / 'index.html'
+          html = index.read_text(encoding='utf-8')
+          old = ['app.js','conexiones.js','intercambio.js','presentaciones.js','gantt-v7.js','import-project-v5.js','presentaciones-v8.js','presentaciones-v11.js','mejoras-v13.js','mejoras-v14.js']
+          groups = {
+              'js/app.js': ['app.js'],
+              'js/conexiones.js': ['conexiones.js'],
+              'js/intercambio.js': ['intercambio.js'],
+              'js/presentaciones-base.js': ['presentaciones.js'],
+              'js/project.js': ['gantt-v7.js','import-project-v5.js'],
+              'js/presentaciones.js': ['presentaciones-v8.js','presentaciones-v11.js'],
+              'js/mejoras.js': ['mejoras-v13.js','mejoras-v14.js']
+          }
+          new = list(groups)
+          actual = re.findall(r'<script\b[^>]*\bsrc="([^"]+)"[^>]*>\s*</script>', html)
+          if actual == new:
+              print('La consolidación ya está aplicada; sin cambios.')
+              raise SystemExit(0)
+          assert actual == old, 'Orden o lista de scripts inesperados; operación detenida.'
+          assert [x for values in groups.values() for x in values] == old
+          styles = ['styles.css','config-layout.css','gantt-v7.css']
+          links = re.findall(r'<link\b[^>]*href="([^"]+\.css)"[^>]*>', html)
+          assert links == styles, 'Hojas de estilo inesperadas.'
+          unknown = {p.name for p in root.glob('*.js')} - set(old) - {'mejoras-v12.js'}
+          assert not unknown, 'Hay JavaScript no inventariado: ' + repr(unknown)
+          outputs = {}
+          for target, sources in groups.items():
+              pieces = [Path(s).read_text(encoding='utf-8') for s in sources]
+              assert all('sourceMappingURL=' not in p for p in pieces), 'Revisar mapas de fuentes antes de mover.'
+              outputs[target] = '\n;\n'.join(pieces) + '\n'
+          css = [Path(s).read_text(encoding='utf-8') for s in styles]
+          assert all(not re.search(r'@import|url\s*\(', s, re.I) for s in css), 'CSS con rutas: requiere revisión manual.'
+          outputs['css/styles.css'] = '\n\n'.join(css) + '\n'
+          outputs['docs/README.md'] = Path('README.md').read_text(encoding='utf-8')
+          versions = sorted(root.glob('VERSION-*.md'), key=lambda p: int(re.search(r'v(\d+)', p.name).group(1)))
+          history = '\n\n---\n\n'.join(p.read_text(encoding='utf-8') for p in versions)
+          outputs['docs/CHANGELOG.md'] = '# Historial de cambios\n\n## TableroTareas-v15\n\nReorganización sin cambios funcionales intencionales. JavaScript en js/, estilos en css/ y documentación en docs/. Se conserva el orden de ejecución y de las reglas CSS; los módulos históricos de presentaciones se integran, no se descartan sus dependencias. Se elimina mejoras-v12.js no cargado por index.html. data/ y recursos/ no se modifican.\n\nValidación automática: sintaxis JS, orden de carga, referencias locales y equivalencia del contenido concatenado. Pendiente: pruebas funcionales y visuales en navegador, importación/exportación y PowerPoint.\n\n' + history + '\n'
+          outputs['docs/ESTRUCTURA.md'] = '# Estructura v15\n\n- index.html: entrada; mantener en la raíz.\n- js/app.js: almacenamiento, router y vistas base.\n- js/conexiones.js: conexiones.\n- js/intercambio.js: XML, Excel y ZIP.\n- js/presentaciones-base.js: plantilla PPTX y enlace inicial con las vistas.\n- js/project.js: Gantt jerárquico e importador Project, en su orden original.\n- js/presentaciones.js: dependencias y generador actual integrados en su orden original.\n- js/mejoras.js: correcciones PPTX y desplegables por columna.\n- css/styles.css: las tres hojas en el orden original.\n- docs/README.md: instrucciones originales.\n- docs/CHANGELOG.md: historial conservado.\n- data/ y recursos/: sin cambios.\n\nLos scripts continúan siendo scripts clásicos, no módulos ES. Las referencias internas y las funciones globales se conservan. Esta consolidación conserva también listeners y observadores: no elimina código activo por parecer antiguo.\n'
+          scripts = '\n'.join('<script src="' + p + '"></script>' for p in new)
+          html, count = re.subn(r'<script\b[^>]*\bsrc="[^"]+"[^>]*>\s*</script>', lambda m: scripts if m.start() == first else '', html) if False else (html, 0)
+          pattern = re.compile(r'<script\b[^>]*\bsrc="[^"]+"[^>]*>\s*</script>')
+          seen = [False]
+          def replace_script(match):
+              if seen[0]: return ''
+              seen[0] = True
+              return scripts
+          html = pattern.sub(replace_script, html)
+          for style in styles:
+              html = re.sub(r'<link\b[^>]*href="' + re.escape(style) + r'"[^>]*>\s*', '', html)
+          html = html.replace('</head>', '<link rel="stylesheet" href="css/styles.css">\n</head>')
+          html = html.replace('content="TableroTareas-v14"', 'content="TableroTareas-v15"')
+          outputs['index.html'] = html
+          for name, content in outputs.items():
+              p = Path(name)
+              assert not p.exists() or name == 'index.html', 'Destino existente: ' + name
+              p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text(content, encoding='utf-8')
+          for target, sources in groups.items():
+              expected = '\n;\n'.join(Path(s).read_text(encoding='utf-8') for s in sources) + '\n'
+              assert Path(target).read_text(encoding='utf-8') == expected
+              subprocess.run(['node','--check',target], check=True)
+          assert re.findall(r'<script\b[^>]*\bsrc="([^"]+)"', html) == new
+          for local in new + ['css/styles.css']:
+              assert Path(local).is_file(), 'Referencia inexistente: ' + local
+          for source in old + styles + ['README.md'] + [p.name for p in versions]:
+              Path(source).unlink()
+          obsolete = Path('mejoras-v12.js')
+          if obsolete.exists(): obsolete.unlink()
+          print(json.dumps({'scripts_antes':len(old),'scripts_despues':len(new),'css_antes':len(styles),'css_despues':1,'validacion_visual':'pendiente'}, ensure_ascii=False))
+          PY
+      - name: Publicar solo en la rama v15
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'v15: consolidar JavaScript, estilos y documentación sin cambios funcionales intencionales'
+          git push origin HEAD:TableroTareas-v15
