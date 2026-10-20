@@ -1,0 +1,75 @@
+name: Rango de fase principal v19
+on:
+  push:
+    branches: [TableroTareas-v19]
+    paths: [.github/workflows/rango-fase-v19.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  actualizar:
+    if: github.ref == 'refs/heads/TableroTareas-v19'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TableroTareas-v19
+      - name: Ajustar y probar rangos independientes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          p=Path('js/presentaciones.js')
+          source=p.read_text(encoding='utf-8')
+          if "const main=g.rows.find(r=>r.kind==='fase'&&r.depth===0)" in source:
+              raise SystemExit(0)
+          marker='/* v11.1:'
+          assert source.count(marker)==1
+          prefix,active=source.split(marker,1)
+          def once(old,new):
+              global active
+              assert active.count(old)==1, 'Patrón inesperado: '+old[:100]
+              active=active.replace(old,new,1)
+          once(" const dates=out.flatMap(g=>g.rows.flatMap(r=>[r.start,r.end])).filter(valid).sort();\n for(const g of out){g.ganttStart=dates[0]||'';g.ganttEnd=dates[dates.length-1]||'';}", " for(const g of out){const main=g.rows.find(r=>r.kind==='fase'&&r.depth===0),own=main?rangoGantt(main.start,main.end):['',''],dates=g.rows.flatMap(r=>[r.start,r.end]).filter(valid).sort();g.ganttStart=own[0]||dates[0]||'';g.ganttEnd=own[1]||dates[dates.length-1]||'';}")
+          once("if(start&&end&&valid(a)&&valid(b)&&b>=a){const bx=7.65+5.05*diffDays(start,a)/days,bw=Math.min(12.7-bx,Math.max(0.025,5.05*(diffDays(a,b)+1)/days));rect(bx,ry+0.07,bw,0.13,r.late?'DC2626':'CBD5E1');if(r.pct!==null&&r.pct>0)rect(bx,ry+0.07,bw*r.pct/100,0.13,c);}", "if(start&&end&&valid(a)&&valid(b)&&b>=a&&a<=end&&b>=start){const st=a<start?start:a,en=b>end?end:b,bx=7.65+5.05*diffDays(start,st)/days,bw=Math.min(12.7-bx,Math.max(0.025,5.05*(diffDays(st,en)+1)/days));rect(bx,ry+0.07,bw,0.13,r.late?'DC2626':'CBD5E1');if(r.pct!==null&&r.pct>0){const progressEnd=diffDays(start,a)+(diffDays(a,b)+1)*r.pct/100,visible=Math.max(0,Math.min(diffDays(start,en)+1,progressEnd)-diffDays(start,st));rect(bx,ry+0.07,Math.min(bw,5.05*visible/days),0.13,c);}}")
+          once("else text('Sin fechas válidas'", "else text(valid(a)&&valid(b)&&b>=a?'Fuera del rango de la fase':'Sin fechas válidas'")
+          once('el eje abarca sus rangos completos.', 'cada bloque usa el rango de su fase principal (nivel 1), conservado en sus continuaciones.')
+          once('version:18','version:19')
+          source=prefix+marker+active
+          subprocess.run(['node','--check'],input=source,text=True,check=True)
+          test=r'''
+          const vm=require('vm'),assert=require('node:assert/strict'),source=require('fs').readFileSync(0,'utf8');
+          const phases=[{id:'f',nombre:'Fase 1'},{id:'h',padreId:'f',nombre:'Subfase'},{id:'z',nombre:'Otra fase'}];
+          const tasks=[{id:'a',titulo:'Principal',proyectoId:'p',faseId:'f',inicio:'2026-04-27',vence:'2026-10-21',estado:'proceso',checklist:[{hecho:true},{hecho:false}]},{id:'b',titulo:'Hija',proyectoId:'p',faseId:'h',inicio:'2026-06-01',vence:'2026-06-20',estado:'done'},{id:'c',titulo:'Otra',proyectoId:'p',faseId:'z',inicio:'2026-01-15',vence:'2027-02-08',estado:'done'}];
+          const ctx={window:{TableroPpt:{build(){},overlap:(a,b,f,c)=>!!(a||b)&&(a||b)<=c&&(b||a)>=f}},document:{addEventListener(){},getElementById(){return null;},body:{}},MutationObserver:class{observe(){}},Store:{proyectos:[{id:'p',nombre:'P',fases:phases,hitos:[{id:'outside',nombre:'Hito externo',faseId:'f',fecha:'2025-01-01',hecho:false}],notas:[]}],tareas:tasks,saveProyecto(){},proy(){},esTerminal:s=>s==='done'},GanttV7:{descendants:(p,id)=>new Set([id,...p.fases.filter(f=>f.padreId===id).map(f=>f.id)])},parseD:s=>new Date(s+'T00:00:00Z'),isoD:d=>d.toISOString().slice(0,10),fmtF:s=>s,HOY:()=> '2026-10-20',diffDays:(a,b)=>(new Date(b)-new Date(a))/86400000,addDays:(s,n)=>new Date(new Date(s).getTime()+n*86400000).toISOString().slice(0,10)};
+          vm.createContext(ctx);vm.runInContext(source,ctx);const api=ctx.window.TableroPpt;
+          const o={from:'2026-10-01',cut:'2026-10-20',selected:[{pid:'p',id:'f'},{pid:'p',id:'z'}],levels:3,mode:'tablero',title:'Prueba'};
+          const groups=api.model(o),g=groups.find(g=>g.name==='Fase 1'),other=groups.find(g=>g.name==='Otra fase');
+          assert.equal(g.ganttStart,'2026-04-27');assert.equal(g.ganttEnd,'2026-10-21');assert.equal(other.ganttStart,'2026-01-15');assert.equal(other.ganttEnd,'2027-02-08');assert.equal(g.pct,75);assert.equal(g.ts.length,1);
+          const shifted=api.model({...o,from:'2028-01-01',cut:'2028-01-20'}).find(g=>g.name==='Fase 1');assert.equal(shifted.ganttStart,g.ganttStart);assert.equal(shifted.ganttEnd,g.ganttEnd);assert.equal(shifted.pct,g.pct);assert.equal(shifted.ts.length,0);
+          const sub=api.model({...o,selected:[{pid:'p',id:'h'}]})[0];assert.equal(sub.ganttStart,'2026-06-01');assert.equal(sub.ganttEnd,'2026-06-20');
+          const many={...g,rows:Array.from({length:45},(_,i)=>g.rows[i%g.rows.length])},steps=api.plan(many).filter(s=>s.kind==='gantt');assert(steps.length>1);
+          for(const [i,s] of steps.entries()){const xml=api.render(s,i,steps.length,o);assert(xml.includes('2026-04-27'));assert(xml.includes('2026-10-21'));assert(!xml.includes('2027-02-08'));}
+          console.log('PASS: rango 27/04/2026-21/10/2026 por fase, selección múltiple y subfase, continuaciones, porcentaje y seguimiento.');
+          '''
+          subprocess.run(['node','-e',test],input=source,text=True,check=True)
+          p.write_text(source,encoding='utf-8')
+          index=Path('index.html')
+          html=index.read_text(encoding='utf-8')
+          assert html.count('content="TableroTareas-v18"')==1
+          index.write_text(html.replace('content="TableroTareas-v18"','content="TableroTareas-v19"'),encoding='utf-8')
+          log=Path('docs/CHANGELOG.md')
+          title,sep,rest=log.read_text(encoding='utf-8').partition('\n')
+          entry='\n## TableroTareas-v19\n\n- El eje temporal de cada bloque Gantt usa el inicio y fin de su fila principal de nivel 1, no el rango combinado de otras fases/proyectos seleccionados. Las continuaciones conservan ese rango.\n- Si no hay fila principal con fechas válidas, calcula el rango solo con las filas de ese bloque, nunca con otros bloques.\n- Mantiene fechas mostradas, niveles, porcentajes actuales, archivadas y período exclusivo del seguimiento.\n- Recorta defensivamente barras que exceden el rango principal sin cambiar su porcentaje ni las fechas mostradas. Las filas totalmente externas se identifican como Fuera del rango de la fase.\n- Pruebas: dos fases con rangos distintos, ejemplo 27/04/2026-21/10/2026, selección de subfase y múltiples diapositivas; sintaxis y modelo/render. Pendiente validación visual en PowerPoint real.\n- No modifica datos, tareas ni adjuntos.\n\n'
+          log.write_text(title+'\n'+entry+rest,encoding='utf-8')
+          PY
+      - name: Publicar solo en v19
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add js/presentaciones.js index.html docs/CHANGELOG.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'v19: ajustar el eje del Gantt al rango de cada fase principal'
+          git push origin HEAD:TableroTareas-v19
