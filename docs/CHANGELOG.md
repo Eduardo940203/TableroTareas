@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## TableroTareas-v18
+
+- Gantt de presentación independiente del período: tareas e hitos visibles según niveles, sin excluir fechas anteriores o posteriores.
+- Fases/subfases: inicio mínimo y fin máximo de sus tareas descendientes; si no hay fechas de tareas, usa las fechas propias. Una fecha única representa un día; fechas invertidas no generan una barra.
+- Eje global de la selección según las filas y los rangos agregados, igual en todas sus diapositivas; barras completas y relleno proporcional al porcentaje actual.
+- Solo Actividades terminadas, Siguientes pasos y Tareas vencidas usan el período. Notas y Gantt no se filtran por período.
+- Conserva avance por checklist, agregación por tareas, modo Project original y opción de archivadas. Vencimiento visual del Gantt según fecha actual.
+- Sin rango visible se sustituye por Sin fechas válidas únicamente cuando faltan fechas o están invertidas.
+- Pruebas: sintaxis y modelo/render con tareas pasadas, presentes, futuras, sin fecha, diferentes niveles y cambio de período. Pendiente validación visual real y regresión integral en navegador/PowerPoint.
+- No modifica tareas, checklists, fechas almacenadas ni adjuntos.
+
+
 ## TableroTareas-v17.1
 
 - Porcentajes de fases/subfases y encabezado del Gantt: promedio del avance actual de todas las tareas descendientes, sin excluirlas por fechas. Se respeta incluir/excluir archivadas y el modo Project original.

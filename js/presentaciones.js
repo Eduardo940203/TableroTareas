@@ -116,6 +116,7 @@ Store.saveProyecto=async function(p,removed){
  return saveProject(p,removed);
 };
 
+function rangoGantt(a,b){const s=valid(a)?a:'',e=valid(b)?b:'';return s&&e&&e<s?['','']:[s||e,e||s];}
 function model(o){
  if(!valid(o.from)||!valid(o.cut)||o.from>o.cut)throw Error('Indica un período válido: el inicio no puede ser posterior al corte.');
  if(!o.selected?.length)throw Error('Selecciona al menos una fase.');
@@ -128,16 +129,16 @@ function model(o){
   for(const id of roots){
    const root=fs.find(f=>f.id===id);if(id&&!root)continue;
    const ids=id?GanttV7.descendants(p,id):new Set(),belongs=t=>id?ids.has(t.faseId):!fs.some(f=>f.id===t.faseId);
-   const ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(h=>belongs(h)&&base.overlap(h.fecha,h.fecha,o.from,o.cut));
+   const ganttTasks=allTasks.filter(belongs),ts=tasks.filter(belongs),hs=(p.hitos||[]).filter(belongs);
    const prog=(kind,obj,list)=>o.mode==='project'?original(kind==='fase'?obj.origen?.porcentaje:obj.projectOrigen?.porcentaje):kind==='fase'?(list.length?Math.round(list.reduce((sum,t)=>sum+avanceTareaPresentacion(t),0)/list.length):0):kind==='hito'?(obj.hecho?100:0):Math.round(avanceTareaPresentacion(obj));
    const rows=[],direct=(x,fid)=>fid?x.faseId===fid:!fs.some(f=>f.id===x.faseId);
-   const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ts.filter(t=>ds.has(t.faseId)),hit=hs.filter(h=>ds.has(h.faseId));const dates=[...child.flatMap(t=>[t.inicio,t.vence]),...hit.map(h=>h.fecha)].filter(valid).sort();rows.push({kind:'fase',name:f.nombre,depth,start:f.inicio||dates[0],end:f.fin||dates[dates.length-1],pct:prog('fase',f,allTasks.filter(t=>ds.has(t.faseId)))});};
+   const phaseRow=(f,depth)=>{const ds=GanttV7.descendants(p,f.id),child=ganttTasks.filter(t=>ds.has(t.faseId)),dates=child.flatMap(t=>rangoGantt(t.inicio,t.vence)).filter(valid).sort(),r=dates.length?[dates[0],dates[dates.length-1]]:rangoGantt(f.inicio,f.fin);rows.push({kind:'fase',name:f.nombre,depth,start:r[0],end:r[1],pct:prog('fase',f,child)});};
    const visit=(f,depth)=>{
     if(f)phaseRow(f,depth);
     if(f&&depth+1<levels)for(const c of sorted(fs.filter(x=>x.padreId===f.id)))visit(c,depth+1);
     const td=f?depth+1:depth;
     if(td<levels){
-     for(const t of ts.filter(x=>direct(x,f?.id)))rows.push({kind:'tarea',name:t.titulo,depth:td,start:t.inicio,end:t.vence,pct:prog('tarea',t),late:!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<o.cut});
+     for(const t of ganttTasks.filter(x=>direct(x,f?.id))){const r=rangoGantt(t.inicio,t.vence);rows.push({kind:'tarea',name:t.titulo,depth:td,start:r[0],end:r[1],pct:prog('tarea',t),late:!Store.esTerminal(t.estado)&&valid(t.vence)&&t.vence<HOY()});}
      for(const h of hs.filter(x=>direct(x,f?.id)))rows.push({kind:'hito',name:'◆ '+h.nombre,depth:td,start:h.fecha,end:h.fecha,pct:prog('hito',h)});
     }
    };
@@ -151,6 +152,8 @@ function model(o){
   }
  }
  if(!out.length)throw Error('Selecciona al menos una fase válida.');
+ const dates=out.flatMap(g=>g.rows.flatMap(r=>[r.start,r.end])).filter(valid).sort();
+ for(const g of out){g.ganttStart=dates[0]||'';g.ganttEnd=dates[dates.length-1]||'';}
  return out;
 }
 
@@ -179,7 +182,7 @@ function plan(g){
 
 const COLS=['Actividades terminadas','Siguientes pasos','Tareas vencidas','Notas'];
 function render(s,index,total,o){
- const g=s.g;let id=1,body='';const E=n=>Math.round(n*914400),days=diffDays(o.from,o.cut)+1;
+ const g=s.g,start=g.ganttStart,end=g.ganttEnd;let id=1,body='';const E=n=>Math.round(n*914400),days=start&&end?diffDays(start,end)+1:1;
  const rect=(x,y,w,h,c)=>{if(w<=0)return;body+=`<p:sp><p:nvSpPr><p:cNvPr id="${++id}" name="Forma ${id}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${E(x)}" y="${E(y)}"/><a:ext cx="${E(w)}" cy="${E(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${c}"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr></p:sp>`;};
  const text=(t,x,y,w,h,size=10,c='253746',bold=false)=>{body+=`<p:sp><p:nvSpPr><p:cNvPr id="${++id}" name="Texto ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${E(x)}" y="${E(y)}"/><a:ext cx="${E(w)}" cy="${E(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square" lIns="0" rIns="0" tIns="0" bIns="0"><a:normAutofit/></a:bodyPr><a:lstStyle/>${String(t).split('\n').map(l=>`<a:p><a:r><a:rPr lang="es-MX" sz="${size*100}" b="${bold?1:0}"><a:solidFill><a:srgbClr val="${c}"/></a:solidFill><a:latin typeface="Arial"/></a:rPr><a:t xml:space="preserve">${X(l)}</a:t></a:r><a:endParaRPr sz="${size*100}"/></a:p>`).join('')}</p:txBody></p:sp>`;};
  rect(0.4,0,5.8,0.08,'339966');rect(7.1,7.42,5.8,0.08,'339966');
@@ -188,14 +191,14 @@ function render(s,index,total,o){
  let y=TOP;
  if(s.kind==='gantt'){
   rect(0.5,y,12.35,0.4,'E9F3ED');[['Tarea',0.6,4.05],['Inicio',4.7,1],['Fin',5.75,1],['Avance',6.8,0.7]].forEach(([t,x,w])=>text(t,x,y+0.1,w,0.22,10,'253746',true));
-  for(let n=0;n<=4;n++)text(date(addDays(o.from,Math.round((days-1)*n/4))),7.6+4.6*n/4,y+0.11,0.9,0.2,8);
+  if(start&&end)for(let n=0;n<=4;n++)text(date(addDays(start,Math.round((days-1)*n/4))),7.6+4.6*n/4,y+0.11,0.9,0.2,8);
   let ry=y+0.48;
-  s.rows.forEach((x,i)=>{const r=x.r,c=r.kind==='fase'?'339966':r.pct===100?'16A34A':r.late?'DC2626':'2563EB';
+  s.rows.forEach((x,i)=>{const r=x.r,c=r.late?'DC2626':r.kind==='fase'?'339966':r.pct===100?'16A34A':'2563EB';
    if(i%2===0)rect(0.5,ry-0.02,12.35,x.h,'F4F6F8');
    text(x.lines.join('\n'),0.6+r.depth*0.15,ry,4-r.depth*0.15,x.h-0.03,10,c,r.kind==='fase');text(date(r.start),4.7,ry+0.03,1,0.23,9);text(date(r.end),5.75,ry+0.03,1,0.23,9);text(pct(r.pct),6.8,ry+0.03,0.7,0.23,9,c);
    const a=valid(r.start)?r.start:r.end,b=valid(r.end)?r.end:r.start;
-   if(base.overlap(a,b,o.from,o.cut)){const st=a<o.from?o.from:a,en=b>o.cut?o.cut:b,bx=7.65+5.05*diffDays(o.from,st)/days,bw=Math.max(0.025,5.05*(diffDays(st,en)+1)/days);rect(bx,ry+0.07,bw,0.13,'CBD5E1');if(r.pct!==null&&r.pct>0)rect(bx,ry+0.07,bw*r.pct/100,0.13,c);}
-   else text('Sin rango visible',7.65,ry+0.03,4.8,0.23,9,'64748B');
+   if(start&&end&&valid(a)&&valid(b)&&b>=a){const bx=7.65+5.05*diffDays(start,a)/days,bw=Math.min(12.7-bx,Math.max(0.025,5.05*(diffDays(a,b)+1)/days));rect(bx,ry+0.07,bw,0.13,r.late?'DC2626':'CBD5E1');if(r.pct!==null&&r.pct>0)rect(bx,ry+0.07,bw*r.pct/100,0.13,c);}
+   else text('Sin fechas válidas',7.65,ry+0.03,4.8,0.23,9,'64748B');
    ry+=x.h;});
   y=y+0.5+s.h+0.2;
  }
@@ -204,7 +207,7 @@ function render(s,index,total,o){
    text(t+' ('+s.blocks.counts[k]+')',x,y,2.95,0.24,11,c,true);rect(x,y+0.3,2.95,0.012,'CBD5E1');
    if(lines.length)text(lines.join('\n'),x,y+0.4,2.95,Math.max(0.2,lines.length*LH+0.05),10);});
  }
- text(date(o.from)+' → '+date(o.cut)+' · '+(o.mode==='project'?'% Project original':'% tablero actual (todas las tareas)')+' · Estados actuales',0.5,7.12,11.3,0.18,9,'64748B');text((index+1)+' / '+total,12.25,7.12,0.6,0.18,9,'64748B');
+ text('Seguimiento: '+date(o.from)+' → '+date(o.cut)+' · '+(o.mode==='project'?'% Project original':'% tablero actual (todas las tareas)')+' · Estados actuales',0.5,7.12,11.3,0.18,9,'64748B');text((index+1)+' / '+total,12.25,7.12,0.6,0.18,9,'64748B');
  const group='<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>';
  return xml(`<p:sld xmlns:a="${A}" xmlns:p="${P}" xmlns:r="${R}"><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>${group}${body}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`);
 }
@@ -240,7 +243,7 @@ function view(nodes,expanded,selected,query){
  return nodes.filter(shown).map(n=>({n,covered:n.kind==='fase'&&covered(n),checked:selected.has(n.key),kids:n.kind==='fase'&&(kids.get(n.key)||[]).length>0,open:!!q||expanded.has(n.key),match:match.has(n.key)}));
 }
 function dialog(pid){
- openModal(`<h4>Generar presentación PowerPoint</h4><div class="form-grid"><div class="full"><label>Título</label><input id="v11Title" value="Seguimiento de proyectos"></div><div class="full"><label>Proyecto</label><select id="v11Pid">${opcionesProy(pid,'Todo el tablero')}</select></div><div class="full"><h4>Periodo y Selección</h4></div><div><label>Fecha inicio del período</label><input id="v11From" type="date" value="${HOY().slice(0,8)}01"></div><div><label>Fecha de corte</label><input id="v11Cut" type="date" value="${HOY()}"></div><div class="full"><button type="button" class="btn" id="v11Toggle" style="width:100%;text-align:left"></button><div id="v11Panel" style="display:none;border:1px solid #94a3b8;padding:8px;margin-top:6px"><input id="v11Search" placeholder="Buscar fase o subfase"><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button type="button" class="btn sm" id="v11Expand">Expandir</button><button type="button" class="btn sm" id="v11Collapse">Contraer</button><button type="button" class="btn sm" id="v11All">Marcar visibles</button><button type="button" class="btn sm" id="v11None">Limpiar selección</button></div><div id="v11List" style="max-height:240px;overflow:auto"></div></div></div><div><label>Niveles a mostrar en el Gantt</label><select id="v11Levels"><option value="1">1 nivel (solo la fase)</option><option value="2" selected>2 niveles</option><option value="3">3 niveles</option><option value="4">4 niveles</option><option value="5">5 niveles</option><option value="6">6 niveles</option><option value="99">Todos los niveles</option></select></div><div><label>Origen del avance</label><select id="v11Mode"><option value="tablero">Tablero: avance actual (sin filtro de fechas)</option><option value="project">Project original: última importación</option></select></div><div class="full"><label style="display:flex;gap:8px"><input type="checkbox" id="v11Notes" checked style="width:auto">Incluir notas (proyecto y fase)</label><label style="display:flex;gap:8px"><input type="checkbox" id="v11Arch" style="width:auto">Incluir tareas archivadas</label></div></div><p class="small muted">El Gantt muestra las fases y subfases según los niveles configurados, aunque estén fuera del período. Las actividades, siguientes pasos y tareas vencidas sí respetan el período y los niveles configurados. Los porcentajes del Gantt y del encabezado corresponden al avance actual de todas las tareas de cada fase, sin filtro de fechas; se respeta la opción de archivadas.</p><div class="modal-foot"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn primary" id="v11Download">Generar .pptx</button></div>`,true);
+ openModal(`<h4>Generar presentación PowerPoint</h4><div class="form-grid"><div class="full"><label>Título</label><input id="v11Title" value="Seguimiento de proyectos"></div><div class="full"><label>Proyecto</label><select id="v11Pid">${opcionesProy(pid,'Todo el tablero')}</select></div><div class="full"><h4>Periodo y Selección</h4></div><div><label>Fecha inicio del período</label><input id="v11From" type="date" value="${HOY().slice(0,8)}01"></div><div><label>Fecha de corte</label><input id="v11Cut" type="date" value="${HOY()}"></div><div class="full"><button type="button" class="btn" id="v11Toggle" style="width:100%;text-align:left"></button><div id="v11Panel" style="display:none;border:1px solid #94a3b8;padding:8px;margin-top:6px"><input id="v11Search" placeholder="Buscar fase o subfase"><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button type="button" class="btn sm" id="v11Expand">Expandir</button><button type="button" class="btn sm" id="v11Collapse">Contraer</button><button type="button" class="btn sm" id="v11All">Marcar visibles</button><button type="button" class="btn sm" id="v11None">Limpiar selección</button></div><div id="v11List" style="max-height:240px;overflow:auto"></div></div></div><div><label>Niveles a mostrar en el Gantt</label><select id="v11Levels"><option value="1">1 nivel (solo la fase)</option><option value="2" selected>2 niveles</option><option value="3">3 niveles</option><option value="4">4 niveles</option><option value="5">5 niveles</option><option value="6">6 niveles</option><option value="99">Todos los niveles</option></select></div><div><label>Origen del avance</label><select id="v11Mode"><option value="tablero">Tablero: avance actual (sin filtro de fechas)</option><option value="project">Project original: última importación</option></select></div><div class="full"><label style="display:flex;gap:8px"><input type="checkbox" id="v11Notes" checked style="width:auto">Incluir notas (proyecto y fase)</label><label style="display:flex;gap:8px"><input type="checkbox" id="v11Arch" style="width:auto">Incluir tareas archivadas</label></div></div><p class="small muted">El Gantt respeta los niveles elegidos y muestra todas las tareas y los hitos de esos niveles sin filtro de período. Sus fechas y porcentajes se calculan con las tareas de cada fase; el eje abarca sus rangos completos. El período solo filtra Actividades terminadas, Siguientes pasos y Tareas vencidas. Se respeta la opción de archivadas. Sin fechas válidas no se inventa un rango.</p><div class="modal-foot"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn primary" id="v11Download">Generar .pptx</button></div>`,true);
  const el=id=>document.getElementById(id);let nodes=[],expanded=new Set(),selected=new Set(),open=false;
  const paint=()=>{
   const v=view(nodes,expanded,selected,el('v11Search').value);
@@ -264,6 +267,6 @@ function dialog(pid){
  }catch(e){console.error(e);toast(e.message,'err');}};
 }
 document.addEventListener('click',e=>{const b=e.target.closest?.('#pptOpen');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const [route,params]=parseHash();dialog(route==='proyecto'?(params.get('id')||''):(document.getElementById('xchgProy')?.value||''));},true);
-window.TableroPpt={build,model,plan,render,parseNotes,tree,view,overlap:base.overlap,legacyBuild:base.legacyBuild,dialog,version:11};
+window.TableroPpt={build,model,plan,render,parseNotes,tree,view,overlap:base.overlap,legacyBuild:base.legacyBuild,dialog,version:18};
 })();
 
