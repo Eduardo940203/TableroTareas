@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## TableroTareas-v17.1
+
+- Porcentajes de fases/subfases y encabezado del Gantt: promedio del avance actual de todas las tareas descendientes, sin excluirlas por fechas. Se respeta incluir/excluir archivadas y el modo Project original.
+- El seguimiento (terminadas, siguientes pasos y vencidas) mantiene el filtro de período. Las filas de actividades, niveles, fechas, eje temporal y diseño permanecen sin cambios.
+- Se aclara en el selector y pie de diapositiva que los porcentajes son actuales, no exclusivos del período. Sin rango visible no fuerza un avance de 0%.
+- Pruebas automáticas sobre el modelo completo: fase histórica al 50%, raíz al 75%, período sin actividad, archivadas y porcentajes Project. Pendiente validación visual en PowerPoint y navegador.
+- No modifica datos, checklists ni adjuntos.
+
+
 ## TableroTareas-v17
 
 - Notas rápidas: filtro Ver notas de independiente del destino Guardar nota en, con Todas (10 recientes), General y proyectos. Cambiar el destino también filtra sus notas. El filtro se conserva al refrescar la vista durante la sesión.
