@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## TableroTareas-v19
+
+- El eje temporal de cada bloque Gantt usa el inicio y fin de su fila principal de nivel 1, no el rango combinado de otras fases/proyectos seleccionados. Las continuaciones conservan ese rango.
+- Si no hay fila principal con fechas válidas, calcula el rango solo con las filas de ese bloque, nunca con otros bloques.
+- Mantiene fechas mostradas, niveles, porcentajes actuales, archivadas y período exclusivo del seguimiento.
+- Recorta defensivamente barras que exceden el rango principal sin cambiar su porcentaje ni las fechas mostradas. Las filas totalmente externas se identifican como Fuera del rango de la fase.
+- Pruebas: dos fases con rangos distintos, ejemplo 27/04/2026-21/10/2026, selección de subfase y múltiples diapositivas; sintaxis y modelo/render. Pendiente validación visual en PowerPoint real.
+- No modifica datos, tareas ni adjuntos.
+
+
 ## TableroTareas-v18
 
 - Gantt de presentación independiente del período: tareas e hitos visibles según niveles, sin excluir fechas anteriores o posteriores.
