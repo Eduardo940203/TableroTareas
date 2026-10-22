@@ -278,3 +278,6 @@ function intercambioHtml() {
     '<p class="muted small">Project: guarda/abre en formato <b>XML (MSPDI)</b>, no .mpp. Cada proyecto es una tarea resumen; sus hitos son hitos de Project. Las tareas sin fechas se exportan con la fecha del proyecto u hoy. Al importar se actualiza por ID o por título y nunca se elimina nada. Adjuntos, conexiones y checklist (solo Excel) no viajan por Project.</p></div>';
 }
 
+/* Exponer funciones para el módulo de presupuesto */
+window.leerXlsx = leerXlsx;
+window.generarXlsx = generarXlsx;

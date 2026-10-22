@@ -1,27 +1,37 @@
 {
   "nombrePortal": "Tablero de Tareas",
-  "logoTexto": "Seg",
-  "colorPrimario": "#2563eb",
+  "logoTexto": "N",
+  "colorPrimario": "#3acce9",
   "tema": "oscuro",
   "responsable": "Nancy",
   "columnas": [
     {
       "id": "activo",
       "nombre": "Activo",
-      "color": "#64748b",
-      "terminal": false
+      "color": "#ffffff",
+      "terminal": false,
+      "ancho": 400
     },
     {
       "id": "proceso",
       "nombre": "En Proceso",
-      "color": "#d97706",
-      "terminal": false
+      "color": "#fbff00",
+      "terminal": false,
+      "ancho": 400
     },
     {
       "id": "terminado",
       "nombre": "Terminado",
-      "color": "#16a34a",
-      "terminal": true
+      "color": "#00ff5e",
+      "terminal": true,
+      "ancho": 400
+    },
+    {
+      "id": "c_mvintupp",
+      "nombre": "Sin Terminar",
+      "color": "#ff0000",
+      "terminal": false,
+      "ancho": 400
     }
   ],
   "prioridades": [

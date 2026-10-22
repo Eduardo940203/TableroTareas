@@ -1,5 +1,107 @@
 [
   {
+    "id": "e_mviz1hm3vu73",
+    "fecha": "2026-10-22T03:18:29.739Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: PRJ0121045 Manejo de Asistencias"
+  },
+  {
+    "id": "e_mvixy7j21eev",
+    "fecha": "2026-10-22T02:47:57.086Z",
+    "tipo": "importacion",
+    "texto": "Project UID: 295 creadas, 0 actualizadas, 0 errores."
+  },
+  {
+    "id": "e_mvixxizo8srk",
+    "fecha": "2026-10-22T02:47:25.284Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: PRJ0121045 Manejo de Asistencias"
+  },
+  {
+    "id": "e_mvixxeyqoix1",
+    "fecha": "2026-10-22T02:47:20.066Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: Asistencias"
+  },
+  {
+    "id": "e_mvio1ug88cn5",
+    "fecha": "2026-10-21T22:10:50.600Z",
+    "tipo": "tarea_movida",
+    "texto": "Analisis Funcional: En Proceso → Activo",
+    "tareaId": "msp_t_1cce4e41ab1e0eddc1d8ea4dc8b3bdeb247fcc80b70e35e167a1cd0594166608",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvio1puoed6d",
+    "fecha": "2026-10-21T22:10:44.640Z",
+    "tipo": "tarea_movida",
+    "texto": "Analisis Funcional: Activo → En Proceso",
+    "tareaId": "msp_t_1cce4e41ab1e0eddc1d8ea4dc8b3bdeb247fcc80b70e35e167a1cd0594166608",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvio1lk99s8p",
+    "fecha": "2026-10-21T22:10:39.081Z",
+    "tipo": "tarea_movida",
+    "texto": "Analisis Funcional: Terminado → Activo",
+    "tareaId": "msp_t_1cce4e41ab1e0eddc1d8ea4dc8b3bdeb247fcc80b70e35e167a1cd0594166608",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvio1adtbqze",
+    "fecha": "2026-10-21T22:10:24.593Z",
+    "tipo": "tarea_movida",
+    "texto": "Analisis Funcional: En Proceso → Terminado",
+    "tareaId": "msp_t_1cce4e41ab1e0eddc1d8ea4dc8b3bdeb247fcc80b70e35e167a1cd0594166608",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mviiydvrl9sn",
+    "fecha": "2026-10-21T19:48:11.079Z",
+    "tipo": "hito",
+    "texto": "Hito cumplido: Actualizar en ARTESA (Desarrollo e Implementacion) TEC-048-FO Diseño Detallado (En caso de ser requerido) (PRJ0121045 Manejo de Asistencias)",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mviiyd53y6rj",
+    "fecha": "2026-10-21T19:48:10.119Z",
+    "tipo": "hito",
+    "texto": "Hito reabierto: Actualizar en ARTESA (Desarrollo e Implementacion) TEC-048-FO Diseño Detallado (En caso de ser requerido) (PRJ0121045 Manejo de Asistencias)",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvh8v1qgqwj7",
+    "fecha": "2026-10-20T22:17:53.032Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en PRJ0121045 Manejo de Asistencias",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvh8tr5im4c2",
+    "fecha": "2026-10-20T22:16:52.662Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en PRJ0121045 Manejo de Asistencias",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvh8pv58m948",
+    "fecha": "2026-10-20T22:13:51.212Z",
+    "tipo": "importacion",
+    "texto": "Project UID: 295 creadas, 0 actualizadas, 0 errores."
+  },
+  {
+    "id": "e_mvh8pa2dlzgs",
+    "fecha": "2026-10-20T22:13:23.893Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: PRJ0121045 Manejo de Asistencias"
+  },
+  {
+    "id": "e_mvgyg4y9yclg",
+    "fecha": "2026-10-20T17:26:21.201Z",
+    "tipo": "importacion",
+    "texto": "Project UID: 295 creadas, 0 actualizadas, 0 errores."
+  },
+  {
     "id": "e_mvftakrtdgnu",
     "fecha": "2026-10-19T22:14:17.513Z",
     "tipo": "tarea_editada",
