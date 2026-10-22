@@ -127,3 +127,21 @@ th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);vert
 .hg7-diamond{position:absolute;top:18px;width:14px;height:14px;background:var(--warn);transform:rotate(45deg)}
 @media(max-width:650px){.hg7-label{width:250px;flex-basis:250px}}
 
+/* Tablas en Notas v20 */
+.nota-tabla {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 13px;
+  border: 1px solid var(--border);
+}
+.nota-tabla th, .nota-tabla td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+.nota-tabla th {
+  background: var(--col);
+  font-weight: 600;
+}
+

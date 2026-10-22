@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## TableroTareas-v20
+
+- Notas rápidas y notas de proyecto: se ha añadido soporte para tablas escritas en formato Markdown.
+- Se agregó el botón `📊 Insertar Tabla` en el formulario de notas para generar una plantilla de tabla con un solo clic.
+- Las tablas se renderizan respetando los estilos del tema (claro/oscuro) y la estructura de la aplicación.
+- No se modifican datos existentes, la sintaxis es opcional y compatible con el texto plano anterior.
+- Incluye la versión estable de Control de Presupuesto (v2.8) con cálculo en tiempo real, agrupación múltiple y copia optimizada para Excel.
+
 ## TableroTareas-v19
 
 - El eje temporal de cada bloque Gantt usa el inicio y fin de su fila principal de nivel 1, no el rango combinado de otras fases/proyectos seleccionados. Las continuaciones conservan ese rango.

@@ -329,7 +329,7 @@ function marcarActivo() {
 }
 
 /* ---------- Router ---------- */
-const RUTAS = { inicio: vInicio, tablero: vTablero, proyectos: vProyectos, proyecto: vProyecto, gantt: vGantt, archivo: vArchivo, historial: vHistorial, config: vConfig };
+const RUTAS = { inicio: vInicio, tablero: vTablero, proyectos: vProyectos, proyecto: vProyecto, gantt: vGantt, archivo: vArchivo, historial: vHistorial, config: vConfig, presupuesto: window.vPresupuesto };
 function parseHash() { const raw = location.hash.slice(1) || 'inicio'; const [p, q] = raw.split('?'); return [p, new URLSearchParams(q || '')]; }
 async function router() {
   const [p, params] = parseHash(); marcarActivo();
@@ -380,14 +380,53 @@ document.addEventListener('change', e => {
 function todasLasNotas() {
   return [...Store.notasGen.map(n => ({ ...n, proyectoId: '' })), ...Store.proyectos.flatMap(p => (p.notas || []).map(n => ({ ...n, proyectoId: p.id })))].sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
+
+/* ---------- FORMATEADOR DE TABLAS (v20) ---------- */
+function formatNota(texto) {
+  if (!texto) return '';
+  const lines = String(texto).split('\n');
+  let html = '';
+  let inTable = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    
+    const isSep = /^\|?[\s-|:-]+\|?$/.test(line) && line.includes('-');
+    
+    if (line.startsWith('|') && line.endsWith('|')) {
+      if (isSep) continue; 
+      
+      const cells = line.split('|').map(c => c.trim()).slice(1, -1);
+      const isHeader = (i + 1 < lines.length && /^\|?[\s-|:-]+\|?$/.test(lines[i+1].trim()) && lines[i+1].includes('-'));
+
+      if (!inTable) {
+        inTable = true;
+        html += '<table class="nota-tabla">';
+      }
+      
+      const tag = isHeader ? 'th' : 'td';
+      html += '<tr>' + cells.map(c => `<${tag}>${esc(c)}</${tag}>`).join('') + '</tr>';
+    } else {
+      if (inTable) {
+        inTable = false;
+        html += '</table>';
+      }
+      html += `<div style="min-height:1.2em; white-space:pre-wrap; word-break:break-word;">${esc(line)}</div>`;
+    }
+  }
+  if (inTable) html += '</table>';
+  return html;
+}
+
 function notaHtml(n) {
-  return '<div class="list-item"><div style="flex:1"><div class="small muted">' + chipProy(n.proyectoId) + ' ' + fmtTs(n.fecha) + (n.tareaId ? ' · ✅ ya es tarea' : '') + '</div><div class="nota">' + esc(n.texto) + '</div></div><div style="display:flex;gap:4px;flex:none">' +
+  return '<div class="list-item"><div style="flex:1"><div class="small muted">' + chipProy(n.proyectoId) + ' ' + fmtTs(n.fecha) + (n.tareaId ? ' · ✅ ya es tarea' : '') + '</div><div class="nota">' + formatNota(n.texto) + '</div></div><div style="display:flex;gap:4px;flex:none">' +
     (n.tareaId ? '' : '<button class="btn sm" data-act="nota-tarea" data-id="' + n.id + '" data-proy="' + n.proyectoId + '" title="Convertir en tarea">→ Tarea</button>') +
     '<button class="btn sm danger" data-act="nota-del" data-id="' + n.id + '" data-proy="' + n.proyectoId + '">✕</button></div></div>';
 }
 function notaForm(proyFijo) {
-  return '<div class="nota-form" data-proy="' + (proyFijo || '') + '"><textarea rows="3" placeholder="Escribe una nota…"></textarea><div class="filters" style="margin-top:6px">' +
+  return '<div class="nota-form" data-proy="' + (proyFijo || '') + '"><textarea rows="4" placeholder="Escribe una nota… (puedes pegar tablas de Excel)"></textarea><div class="filters" style="margin-top:6px">' +
     (proyFijo === undefined ? '<span class="small muted">Guardar nota en:</span><select class="nota-sel">' + opcionesProy('', 'General (sin proyecto)') + '</select>' : '') +
+    '<button class="btn" type="button" data-act="nota-tabla">📊 Insertar Tabla</button>' +
     '<button class="btn primary" data-act="nota-guardar">Guardar nota</button></div></div>';
 }
 
@@ -671,6 +710,15 @@ const ACTIONS = {
     if (proy) { const p = Store.proy(proy); p.notas = p.notas || []; p.notas.unshift(n); } else Store.notasGen.unshift(n);
     await guardarNotaDe(proy); await Store.log('nota', 'Nota agregada' + (proy ? ' en ' + Store.proy(proy).nombre : ' (general)'), { proyectoId: proy }); toast('Nota guardada.'); router();
   },
+  'nota-tabla'(b) {
+    const f = b.closest('.nota-form'), txt = $('textarea', f);
+    const tpl = "\n| Columna 1 | Columna 2 | Columna 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n";
+    const startPos = txt.selectionStart;
+    const endPos = txt.selectionEnd;
+    txt.value = txt.value.substring(0, startPos) + tpl + txt.value.substring(endPos, txt.value.length);
+    txt.focus();
+    txt.selectionStart = txt.selectionEnd = startPos + tpl.length;
+  },
   'nota-tarea'(b) {
     const proy = b.dataset.proy, lista = proy ? Store.proy(proy).notas : Store.notasGen, n = lista.find(x => x.id === b.dataset.id);
     abrirTarea(null, { prefill: { titulo: n.texto.split('\n')[0].slice(0, 80), descripcion: n.texto, proyectoId: proy }, fromNota: { id: n.id, proyectoId: proy } });
@@ -764,6 +812,36 @@ document.addEventListener('submit', async e => {
   } else if (e.target.id === 'mForm') e.preventDefault();
 });
 
+/* ---------- INTERCEPTOR DE PEGADO (v20) ---------- */
+document.addEventListener('paste', e => {
+  const ta = e.target.closest('.nota-form textarea');
+  if (!ta) return;
+  
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  // Detectar si viene de Excel (contiene tabulaciones y saltos de línea)
+  if (text.includes('\t') && text.includes('\n')) {
+    e.preventDefault();
+    const rows = text.trim().split('\n').map(r => r.split('\t'));
+    if (rows.length > 0 && rows[0].length > 1) {
+      let md = '\n';
+      // Encabezados
+      md += '| ' + rows[0].map(c => c.trim() || ' ').join(' | ') + ' |\n';
+      // Separador
+      md += '| ' + rows[0].map(() => '---').join(' | ') + ' |\n';
+      // Filas de datos
+      for (let i = 1; i < rows.length; i++) {
+        md += '| ' + rows[i].map(c => c.trim() || ' ').join(' | ') + ' |\n';
+      }
+      
+      const startPos = ta.selectionStart;
+      const endPos = ta.selectionEnd;
+      ta.value = ta.value.substring(0, startPos) + md + ta.value.substring(endPos, ta.value.length);
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = startPos + md.length;
+    }
+  }
+});
+
 /* ---------- Inicio ---------- */
 async function initApp() {
   try { await Store.init(); } catch (e) { console.error(e); }
@@ -774,4 +852,3 @@ async function initApp() {
   }
 }
 document.addEventListener('DOMContentLoaded', initApp);
-

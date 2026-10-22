@@ -1,5 +1,127 @@
 [
   {
+    "id": "e_mvk17ahwt98f",
+    "fecha": "2026-10-22T21:06:45.860Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: PRJ0121045 Manejo de Asistencias"
+  },
+  {
+    "id": "e_mvjz5wut7sve",
+    "fecha": "2026-10-22T20:09:42.293Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en PRJ0121045 Manejo de Asistencias",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvjz0eox40tb",
+    "fecha": "2026-10-22T20:05:25.473Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en PRJ0121045 Manejo de Asistencias",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvjz0bshz6sg",
+    "fecha": "2026-10-22T20:05:21.713Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en PRJ0121045 Manejo de Asistencias",
+    "proyectoId": "msp_p_b850b054491cbbd057cbd2b0a1adf8236f285c104917ed24e40d9fd264f61074"
+  },
+  {
+    "id": "e_mvjyw3rb79uh",
+    "fecha": "2026-10-22T20:02:04.679Z",
+    "tipo": "importacion",
+    "texto": "Project UID: 295 creadas, 0 actualizadas, 0 errores."
+  },
+  {
+    "id": "e_mvjyvhovl3ww",
+    "fecha": "2026-10-22T20:01:36.079Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: Tabla"
+  },
+  {
+    "id": "e_mvjyncjrxdcy",
+    "fecha": "2026-10-22T19:55:16.167Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en Tabla",
+    "proyectoId": "p_mvjxcprwaef3"
+  },
+  {
+    "id": "e_mvjynbilgpu7",
+    "fecha": "2026-10-22T19:55:14.829Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en Tabla",
+    "proyectoId": "p_mvjxcprwaef3"
+  },
+  {
+    "id": "e_mvjyhhg3i1zv",
+    "fecha": "2026-10-22T19:50:42.579Z",
+    "tipo": "nota",
+    "texto": "Nota agregada (general)",
+    "proyectoId": ""
+  },
+  {
+    "id": "e_mvjxdzbywtu5",
+    "fecha": "2026-10-22T19:19:59.518Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en Tabla",
+    "proyectoId": "p_mvjxcprwaef3"
+  },
+  {
+    "id": "e_mvjxdas2hz8t",
+    "fecha": "2026-10-22T19:19:27.698Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en Tabla",
+    "proyectoId": "p_mvjxcprwaef3"
+  },
+  {
+    "id": "e_mvjxcyfxrs18",
+    "fecha": "2026-10-22T19:19:11.709Z",
+    "tipo": "proyecto_creado",
+    "texto": "Proyecto creado: Tabla",
+    "proyectoId": "p_mvjxcprwaef3"
+  },
+  {
+    "id": "e_mvjxcob4t50v",
+    "fecha": "2026-10-22T19:18:58.576Z",
+    "tipo": "proyecto_eliminado",
+    "texto": "Proyecto eliminado: test"
+  },
+  {
+    "id": "e_mvjxcdqh4gvl",
+    "fecha": "2026-10-22T19:18:44.873Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en test",
+    "proyectoId": "p_mvjx76hibk24"
+  },
+  {
+    "id": "e_mvjxaqu49frp",
+    "fecha": "2026-10-22T19:17:28.540Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en test",
+    "proyectoId": "p_mvjx76hibk24"
+  },
+  {
+    "id": "e_mvjx87q4h9nw",
+    "fecha": "2026-10-22T19:15:30.460Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en test",
+    "proyectoId": "p_mvjx76hibk24"
+  },
+  {
+    "id": "e_mvjx7vipa30y",
+    "fecha": "2026-10-22T19:15:14.641Z",
+    "tipo": "nota",
+    "texto": "Nota agregada en test",
+    "proyectoId": "p_mvjx76hibk24"
+  },
+  {
+    "id": "e_mvjx78vgzrk1",
+    "fecha": "2026-10-22T19:14:45.292Z",
+    "tipo": "proyecto_creado",
+    "texto": "Proyecto creado: test",
+    "proyectoId": "p_mvjx76hibk24"
+  },
+  {
     "id": "e_mviz1hm3vu73",
     "fecha": "2026-10-22T03:18:29.739Z",
     "tipo": "proyecto_eliminado",
